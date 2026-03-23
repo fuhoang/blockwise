@@ -22,27 +22,29 @@ npm run build
 
 ## Git Flow
 
-This repository uses a lightweight trunk-based flow with short-lived branches.
+This repository uses the Gitflow branching model.
 
-- `main` is always deployable.
-- Create all work from `main`.
-- Open a pull request back into `main`.
-- Merge only after CI passes.
-- Tag releases from `main`.
+- `main` stores production-ready history.
+- `develop` is the main integration branch for ongoing work.
+- `feature/*` branches are created from `develop` and merged back into `develop`.
+- `release/*` branches are created from `develop` and merged into both `main` and `develop`.
+- `hotfix/*` branches are created from `main` and merged into both `main` and `develop`.
 
-### Branch Naming
+### Branch Model
 
-- `feature/<short-description>` for new features
-- `fix/<short-description>` for bug fixes
-- `chore/<short-description>` for maintenance
-- `docs/<short-description>` for documentation-only changes
-- `release/<version>` only when preparing a coordinated release branch
+Use these branch names:
+
+- `feature/<short-description>`
+- `release/<version>`
+- `hotfix/<short-description>`
 
 Examples:
 
 ```bash
+git checkout develop
 git checkout -b feature/auth-flow
-git checkout -b fix/navbar-overflow
+git checkout -b release/0.1.0
+git checkout -b hotfix/fix-login-redirect
 ```
 
 ### Commit Style
@@ -57,6 +59,9 @@ Keep commits focused and readable. Prefer imperative messages:
 
 Every pull request should:
 
+- target the correct base branch for Gitflow
+- use `develop` for feature work
+- use `main` only for release and hotfix promotion
 - describe the user-facing change
 - reference any related issue
 - include screenshots for UI changes

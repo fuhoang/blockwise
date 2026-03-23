@@ -4,14 +4,14 @@ on:
   push:
     branches:
       - main
+      - develop
       - "feature/**"
-      - "fix/**"
-      - "chore/**"
-      - "docs/**"
       - "release/**"
+      - "hotfix/**"
   pull_request:
     branches:
       - main
+      - develop
 
 jobs:
   validate:
