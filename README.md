@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SatoshiLearn
 
-## Getting Started
+Next.js 16 app for SatoshiLearn.
 
-First, run the development server:
+## Local Development
+
+Install dependencies and start the dev server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Useful commands:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run build
+```
 
-## Learn More
+## Git Flow
 
-To learn more about Next.js, take a look at the following resources:
+This repository uses a lightweight trunk-based flow with short-lived branches.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `main` is always deployable.
+- Create all work from `main`.
+- Open a pull request back into `main`.
+- Merge only after CI passes.
+- Tag releases from `main`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Branch Naming
 
-## Deploy on Vercel
+- `feature/<short-description>` for new features
+- `fix/<short-description>` for bug fixes
+- `chore/<short-description>` for maintenance
+- `docs/<short-description>` for documentation-only changes
+- `release/<version>` only when preparing a coordinated release branch
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Examples:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+git checkout -b feature/auth-flow
+git checkout -b fix/navbar-overflow
+```
+
+### Commit Style
+
+Keep commits focused and readable. Prefer imperative messages:
+
+- `Add login form validation`
+- `Fix build script for webpack`
+- `Update CI to run lint and build`
+
+## Pull Requests
+
+Every pull request should:
+
+- describe the user-facing change
+- reference any related issue
+- include screenshots for UI changes
+- pass `npm run lint` and `npm run build`
+
+Detailed expectations live in [CONTRIBUTING.md](./CONTRIBUTING.md).
