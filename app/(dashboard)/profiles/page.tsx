@@ -58,8 +58,8 @@ export default async function ProfilesPage() {
             What comes next
           </p>
           <div className="mt-4 space-y-3 text-sm leading-7 text-zinc-300">
-            <p>Profile rows are now created on demand from your authenticated user.</p>
-            <p>Next iterations can add display name, avatar, and account settings.</p>
+            <p>Profile rows now sync automatically when you sign in or confirm your account.</p>
+            <p>Next iterations can add avatar, richer account settings, and notification preferences.</p>
             <p>Subscription state and richer learning analytics can hang off this profile.</p>
           </div>
         </section>

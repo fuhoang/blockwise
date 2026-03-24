@@ -1,7 +1,34 @@
 import { redirect } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types/profile";
+
+export async function syncProfileForUser(user: User) {
+  const supabase = await createServerSupabaseClient();
+
+  if (!supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .upsert(
+      {
+        id: user.id,
+        email: user.email ?? null,
+      },
+      { onConflict: "id" },
+    )
+    .select("id, email, display_name, created_at")
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data as Profile;
+}
 
 export async function getOrCreateProfile() {
   const supabase = await createServerSupabaseClient();
@@ -35,20 +62,13 @@ export async function getOrCreateProfile() {
     return existingProfile as Profile;
   }
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .insert({
-      id: user.id,
-      email: user.email ?? null,
-    })
-    .select("id, email, display_name, created_at")
-    .single();
+  const data = await syncProfileForUser(user);
 
-  if (error || !data) {
+  if (!data) {
     return fallbackProfile;
   }
 
-  return data as Profile;
+  return data;
 }
 
 export async function getProfileSummary() {
