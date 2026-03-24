@@ -16,6 +16,9 @@ const NAV_LINKS = [
   { href: "/#pricing", label: "Pricing" },
 ] satisfies NavLink[];
 
+const BRAND_FONT_STACK =
+  '"Bungee", Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif';
+
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -28,7 +31,10 @@ export function Navbar() {
             className="flex items-end justify-center gap-2"
             onClick={() => setIsMenuOpen(false)}
           >
-            <span className="text-center text-xl uppercase tracking-[0.08em] text-white [font-family:var(--font-bungee)] sm:text-2xl">
+            <span
+              className="text-center text-xl uppercase tracking-[0.08em] text-white sm:text-2xl"
+              style={{ fontFamily: BRAND_FONT_STACK }}
+            >
               Satoshi Learn
             </span>
             <span
@@ -75,7 +81,10 @@ export function Navbar() {
           href="/"
           className="hidden items-end justify-center gap-2 md:flex md:justify-self-center"
         >
-          <span className="text-center text-xl uppercase tracking-[0.08em] text-white [font-family:var(--font-bungee)] sm:text-2xl md:text-3xl">
+          <span
+            className="text-center text-xl uppercase tracking-[0.08em] text-white sm:text-2xl md:text-3xl"
+            style={{ fontFamily: BRAND_FONT_STACK }}
+          >
             Satoshi Learn
           </span>
           <span
