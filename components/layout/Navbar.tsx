@@ -86,6 +86,9 @@ export function Navbar() {
           </span>
         </Link>
         <div className="hidden items-center justify-center gap-3 md:flex md:justify-self-end">
+          <Link href="/auth/login" className="text-sm text-zinc-400 transition hover:text-white">
+            Log in
+          </Link>
           <Link href="/learn">
             <Button className="bg-orange-500 !text-white hover:bg-orange-400 hover:!text-white">
               Start Learning
@@ -110,6 +113,11 @@ export function Navbar() {
               ))}
             </nav>
             <div className="mt-4 flex flex-col gap-3 border-t border-white/10 pt-4">
+              <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
+                <Button className="w-full" variant="secondary">
+                  Log in
+                </Button>
+              </Link>
               <Link href="/learn" onClick={() => setIsMenuOpen(false)}>
                 <Button className="w-full px-3 py-1.5 text-[11px] bg-orange-500 !text-white hover:bg-orange-400 hover:!text-white">
                   Start Learning
