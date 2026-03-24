@@ -11,6 +11,39 @@ function sanitizeDisplayName(value: unknown) {
   return trimmed.length > 0 ? trimmed.slice(0, 50) : null;
 }
 
+function sanitizeShortText(value: unknown, maxLength: number) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed.slice(0, maxLength) : null;
+}
+
+function sanitizeAvatarUrl(value: unknown) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    const url = new URL(trimmed);
+
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return null;
+    }
+
+    return url.toString().slice(0, 500);
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: Request) {
   const supabase = await createServerSupabaseClient();
 
@@ -32,25 +65,41 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = (await request.json()) as { display_name?: unknown };
+  const body = (await request.json()) as {
+    avatar_url?: unknown;
+    bio?: unknown;
+    display_name?: unknown;
+    timezone?: unknown;
+  };
   const displayName = sanitizeDisplayName(body.display_name);
+  const avatarUrl = sanitizeAvatarUrl(body.avatar_url);
+  const bio = sanitizeShortText(body.bio, 240);
+  const timezone = sanitizeShortText(body.timezone, 100);
 
   const { data, error } = await supabase
     .from("profiles")
     .upsert(
       {
+        avatar_url: avatarUrl,
+        bio,
         id: user.id,
         email: user.email ?? null,
         display_name: displayName,
+        timezone,
       },
       { onConflict: "id" },
     )
-    .select("id, email, display_name, created_at")
+    .select("id, email, display_name, avatar_url, bio, timezone, created_at")
     .single();
 
   if (error) {
+    const message =
+      error.message.includes("column") || error.code === "PGRST204"
+        ? "Your Supabase profiles table is missing the latest profile fields. Rerun supabase/schema.sql and try again."
+        : "Unable to update your profile right now.";
+
     return NextResponse.json(
-      { error: "Unable to update your profile right now." },
+      { error: message },
       { status: 500 },
     );
   }

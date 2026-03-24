@@ -2,11 +2,17 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text,
   display_name text,
+  avatar_url text,
+  bio text,
+  timezone text,
   created_at timestamptz not null default timezone('utc'::text, now())
 );
 
 alter table public.profiles add column if not exists email text;
 alter table public.profiles add column if not exists display_name text;
+alter table public.profiles add column if not exists avatar_url text;
+alter table public.profiles add column if not exists bio text;
+alter table public.profiles add column if not exists timezone text;
 alter table public.profiles add column if not exists created_at timestamptz not null default timezone('utc'::text, now());
 
 create table if not exists public.lesson_progress (

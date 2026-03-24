@@ -18,13 +18,31 @@ export default async function ProfilesPage() {
           </p>
         </section>
 
-        <section className="grid gap-6 md:grid-cols-3">
+        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-5">
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6">
             <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
               Email
             </p>
             <p className="mt-3 break-all text-lg font-medium text-white">
               {profile.email ?? "No email available"}
+            </p>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6">
+            <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+              Display name
+            </p>
+            <p className="mt-3 text-lg font-medium text-white">
+              {profile.display_name ?? "Not set yet"}
+            </p>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6">
+            <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+              Timezone
+            </p>
+            <p className="mt-3 text-lg font-medium text-white">
+              {profile.timezone ?? "Not set yet"}
             </p>
           </div>
 
@@ -49,9 +67,44 @@ export default async function ProfilesPage() {
               })}
             </p>
           </div>
+
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6">
+            <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+              Avatar
+            </p>
+            <div className="mt-3 flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5 text-sm font-semibold text-white">
+                {profile.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt="Profile avatar"
+                    className="h-full w-full object-cover"
+                    src={profile.avatar_url}
+                  />
+                ) : (
+                  (profile.display_name || profile.email || "P")
+                    .charAt(0)
+                    .toUpperCase()
+                )}
+              </span>
+              <p className="min-w-0 text-sm leading-6 text-zinc-300">
+                {profile.avatar_url ?? "Not set yet"}
+              </p>
+            </div>
+          </div>
         </section>
 
         <ProfileDetailsForm profile={profile} />
+
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-8">
+          <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+            Bio
+          </p>
+          <p className="mt-4 max-w-3xl text-sm leading-8 text-zinc-300">
+            {profile.bio ??
+              "Add a short note about how you want to learn Bitcoin, what pace suits you, or what you are focused on next."}
+          </p>
+        </section>
 
         <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-8">
           <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">

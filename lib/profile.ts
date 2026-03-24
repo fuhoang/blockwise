@@ -20,7 +20,7 @@ export async function syncProfileForUser(user: User) {
       },
       { onConflict: "id" },
     )
-    .select("id, email, display_name, created_at")
+    .select("id, email, display_name, avatar_url, bio, timezone, created_at")
     .single();
 
   if (error || !data) {
@@ -49,12 +49,15 @@ export async function getOrCreateProfile() {
     id: user.id,
     email: user.email ?? null,
     display_name: null,
+    avatar_url: null,
+    bio: null,
+    timezone: null,
     created_at: user.created_at,
   };
 
   const { data: existingProfile, error: selectError } = await supabase
     .from("profiles")
-    .select("id, email, display_name, created_at")
+    .select("id, email, display_name, avatar_url, bio, timezone, created_at")
     .eq("id", user.id)
     .single();
 
