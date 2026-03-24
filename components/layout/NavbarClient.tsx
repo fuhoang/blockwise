@@ -29,6 +29,8 @@ export function NavbarClient({
   userLabel,
 }: NavbarClientProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileInitial = userLabel?.charAt(0).toUpperCase() ?? "P";
 
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-black/90 text-white backdrop-blur">
@@ -104,25 +106,57 @@ export function NavbarClient({
         </Link>
         <div className="hidden items-center justify-center gap-3 md:flex md:justify-self-end">
           {isAuthenticated ? (
-            <>
-              {userLabel ? (
-                <span className="max-w-48 truncate text-sm text-zinc-400">
-                  {userLabel}
-                </span>
-              ) : null}
-              <a
-                href="/auth/logout"
-                className="text-sm text-zinc-400 transition hover:text-white"
-                rel="nofollow"
+            <div className="relative">
+              <button
+                aria-expanded={isProfileMenuOpen}
+                aria-haspopup="menu"
+                aria-label="Open profile menu"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-semibold text-white transition hover:bg-white/10"
+                onClick={() => setIsProfileMenuOpen((current) => !current)}
+                type="button"
               >
-                Log out
-              </a>
-              <Link href="/learn">
-                <Button className="bg-orange-500 !text-white hover:bg-orange-400 hover:!text-white">
-                  Continue learning
-                </Button>
-              </Link>
-            </>
+                {profileInitial}
+              </button>
+              {isProfileMenuOpen ? (
+                <div className="absolute right-0 top-full mt-3 w-64 rounded-3xl border border-white/10 bg-zinc-950/95 p-4 shadow-[0_20px_80px_rgba(0,0,0,0.45)] backdrop-blur">
+                  {userLabel ? (
+                    <p className="truncate border-b border-white/10 pb-3 text-sm text-zinc-400">
+                      {userLabel}
+                    </p>
+                  ) : null}
+                  <div className="mt-3 flex flex-col gap-2">
+                    <Link
+                      className="rounded-2xl px-4 py-3 text-sm text-white transition hover:bg-white/5"
+                      href="/profiles"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <Link
+                      className="rounded-2xl px-4 py-3 text-sm text-white transition hover:bg-white/5"
+                      href="/learn"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      Curriculum
+                    </Link>
+                    <Link
+                      className="rounded-2xl px-4 py-3 text-sm text-white transition hover:bg-white/5"
+                      href="/purchases"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      Purchases
+                    </Link>
+                    <a
+                      className="rounded-2xl px-4 py-3 text-sm text-white transition hover:bg-white/5"
+                      href="/auth/logout"
+                      rel="nofollow"
+                    >
+                      Log out
+                    </a>
+                  </div>
+                </div>
+              ) : null}
+            </div>
           ) : (
             <>
               <Link
@@ -164,6 +198,16 @@ export function NavbarClient({
                       {userLabel}
                     </p>
                   ) : null}
+                  <Link href="/profiles" onClick={() => setIsMenuOpen(false)}>
+                    <Button className="w-full" variant="secondary">
+                      Profile
+                    </Button>
+                  </Link>
+                  <Link href="/purchases" onClick={() => setIsMenuOpen(false)}>
+                    <Button className="w-full" variant="secondary">
+                      Purchases
+                    </Button>
+                  </Link>
                   <a
                     href="/auth/logout"
                     onClick={() => setIsMenuOpen(false)}
@@ -173,11 +217,6 @@ export function NavbarClient({
                       Log out
                     </Button>
                   </a>
-                  <Link href="/learn" onClick={() => setIsMenuOpen(false)}>
-                    <Button className="w-full bg-orange-500 !text-white hover:bg-orange-400 hover:!text-white">
-                      Continue learning
-                    </Button>
-                  </Link>
                 </>
               ) : (
                 <>
