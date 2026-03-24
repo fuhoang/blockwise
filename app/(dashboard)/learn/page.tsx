@@ -52,11 +52,23 @@ const modules = [
     description:
       "This is where most people get confused",
     lessons: [
-      { title: "What is a Bitcoin wallet?", href: "/learn/wallets" },
-      { title: "Custodial vs non-custodial wallets", href: "/learn/wallets" },
-      { title: "Private keys explained", href: "/learn/wallets" },
-      { title: "Seed phrases (very important)", href: "/learn/security" },
-      { title: "How to store Bitcoin safely", href: "/learn/security" },
+      {
+        title: "What is a Bitcoin wallet?",
+        href: "/learn/what-is-a-bitcoin-wallet",
+      },
+      {
+        title: "Custodial vs non-custodial wallets",
+        href: "/learn/custodial-vs-non-custodial-wallets",
+      },
+      {
+        title: "Private keys explained",
+        href: "/learn/private-keys-explained",
+      },
+      { title: "Seed phrases (very important)", href: "/learn/seed-phrases" },
+      {
+        title: "How to store Bitcoin safely",
+        href: "/learn/how-to-store-bitcoin-safely",
+      },
     ],
   },
   {
