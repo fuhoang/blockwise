@@ -127,6 +127,7 @@ describe("DashboardOverview", () => {
     expect(screen.getAllByText("Bitcoin track")).toHaveLength(2);
     expect(screen.getAllByText("Satoshi")).toHaveLength(2);
     expect(screen.getAllByText("Foundations")).toHaveLength(2);
+    expect(screen.getByText("No active subscription")).toBeInTheDocument();
     expect(screen.getByText("What Is Bitcoin?")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open next lesson" })).toHaveAttribute(
       "href",
