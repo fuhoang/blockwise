@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { buildAuthCallbackUrl } from "@/lib/auth-redirects";
@@ -16,6 +16,11 @@ export function AccountSecurityForm({
   isEmailConfirmed,
 }: AccountSecurityFormProps) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const isMounted = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -113,31 +118,46 @@ export function AccountSecurityForm({
             </p>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2">
-            <label className="block">
-              <span className="text-sm text-zinc-400">New password</span>
-              <input
-                autoComplete="new-password"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-orange-500/40"
-                minLength={8}
-                onChange={(event) => setNewPassword(event.target.value)}
-                type="password"
-                value={newPassword}
-              />
-            </label>
+          {isMounted ? (
+            <div className="grid gap-5 md:grid-cols-2">
+              <label className="block">
+                <span className="text-sm text-zinc-400">New password</span>
+                <input
+                  autoComplete="new-password"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-orange-500/40"
+                  data-1p-ignore="true"
+                  data-lpignore="true"
+                  minLength={8}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                  type="password"
+                  value={newPassword}
+                />
+              </label>
 
-            <label className="block">
-              <span className="text-sm text-zinc-400">Confirm password</span>
-              <input
-                autoComplete="new-password"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-orange-500/40"
-                minLength={8}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                type="password"
-                value={confirmPassword}
-              />
-            </label>
-          </div>
+              <label className="block">
+                <span className="text-sm text-zinc-400">Confirm password</span>
+                <input
+                  autoComplete="new-password"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-orange-500/40"
+                  data-1p-ignore="true"
+                  data-lpignore="true"
+                  minLength={8}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  type="password"
+                  value={confirmPassword}
+                />
+              </label>
+            </div>
+          ) : (
+            <div className="grid gap-5 md:grid-cols-2" aria-hidden="true">
+              <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-zinc-500">
+                Loading password fields...
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-zinc-500">
+                Loading password fields...
+              </div>
+            </div>
+          )}
 
           {error ? (
             <p className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
