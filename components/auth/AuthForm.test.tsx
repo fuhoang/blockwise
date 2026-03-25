@@ -289,5 +289,45 @@ describe("AuthForm", () => {
     });
 
     expect(await screen.findByText("Confirmation email sent.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again in 60s" })).toBeDisabled();
+  });
+
+  it("shows a friendly rate-limit message when resend is throttled", async () => {
+    signUp.mockResolvedValue({
+      data: { session: null },
+      error: null,
+    });
+    resend.mockResolvedValue({
+      error: { message: "email rate limit exceeded" },
+    });
+    createBrowserSupabaseClient.mockReturnValue({
+      auth: {
+        resend,
+        signInWithOAuth,
+        signUp,
+      },
+    });
+
+    render(<AuthForm mode="register" nextPath="/learn" />);
+
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "user@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+
+    expect(
+      await screen.findByRole("button", { name: "Resend confirmation email" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Resend confirmation email" }));
+
+    expect(
+      await screen.findByText(
+        "Too many email requests. Please wait a few minutes before trying again.",
+      ),
+    ).toBeInTheDocument();
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/Button";
@@ -12,6 +12,14 @@ type AuthFormProps = {
   mode: "login" | "register";
   nextPath: string;
 };
+
+function getFriendlyAuthErrorMessage(message: string) {
+  if (/email rate limit exceeded/i.test(message)) {
+    return "Too many email requests. Please wait a few minutes before trying again.";
+  }
+
+  return message;
+}
 
 async function syncAuthenticatedProfile() {
   try {
@@ -34,6 +42,21 @@ export function AuthForm({ mode, nextPath }: AuthFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResendingConfirmation, setIsResendingConfirmation] = useState(false);
   const [showResendConfirmation, setShowResendConfirmation] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setResendCooldown((current) => Math.max(0, current - 1));
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [resendCooldown]);
 
   async function handleGoogleAuth() {
     if (!supabase) {
@@ -137,6 +160,10 @@ export function AuthForm({ mode, nextPath }: AuthFormProps) {
       return;
     }
 
+    if (resendCooldown > 0) {
+      return;
+    }
+
     setError(null);
     setMessage(null);
     setIsResendingConfirmation(true);
@@ -150,13 +177,14 @@ export function AuthForm({ mode, nextPath }: AuthFormProps) {
     });
 
     if (resendError) {
-      setError(resendError.message);
+      setError(getFriendlyAuthErrorMessage(resendError.message));
       setIsResendingConfirmation(false);
       return;
     }
 
     setMessage("Confirmation email sent.");
     setShowResendConfirmation(true);
+    setResendCooldown(60);
     setIsResendingConfirmation(false);
   }
 
@@ -276,14 +304,16 @@ export function AuthForm({ mode, nextPath }: AuthFormProps) {
         {showResendConfirmation ? (
           <Button
             className="w-full border border-white/10 bg-white text-black hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
-            disabled={isResendingConfirmation}
+            disabled={isResendingConfirmation || resendCooldown > 0}
             onClick={handleResendConfirmation}
             type="button"
             variant="secondary"
           >
             {isResendingConfirmation
               ? "Sending confirmation..."
-              : "Resend confirmation email"}
+              : resendCooldown > 0
+                ? `Try again in ${resendCooldown}s`
+                : "Resend confirmation email"}
           </Button>
         ) : null}
       </form>
