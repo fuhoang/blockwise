@@ -14,18 +14,23 @@ describe("public metadata", () => {
 
   it("includes metadata for indexable guide pages", () => {
     expect(learnCryptoMetadata.alternates?.canonical).toBe("http://localhost:3000/learn-crypto");
+    expect(learnCryptoMetadata.description).toContain("live Bitcoin track");
     expect(bitcoinForBeginnersMetadata.alternates?.canonical).toBe(
       "http://localhost:3000/bitcoin-for-beginners",
     );
+    expect(bitcoinForBeginnersMetadata.description).toContain("Bitcoin for beginners");
     expect(walletBasicsMetadata.alternates?.canonical).toBe(
       "http://localhost:3000/crypto-wallet-basics",
     );
+    expect(walletBasicsMetadata.description).toContain("crypto wallet basics");
     expect(whatIsBitcoinMetadata.alternates?.canonical).toBe(
       "http://localhost:3000/what-is-bitcoin",
     );
+    expect(whatIsBitcoinMetadata.description).toContain("what Bitcoin is");
     expect(transactionsMetadata.alternates?.canonical).toBe(
       "http://localhost:3000/how-crypto-transactions-work",
     );
+    expect(transactionsMetadata.description).toContain("crypto transactions work");
   });
 
   it("uses dedicated social images on public marketing pages", () => {
@@ -51,6 +56,14 @@ describe("public metadata", () => {
         width: 1200,
         height: 630,
         alt: "What is Bitcoin",
+      },
+    ]);
+    expect(transactionsMetadata.openGraph?.images).toEqual([
+      {
+        url: "http://localhost:3000/how-crypto-transactions-work/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "How crypto transactions work",
       },
     ]);
   });

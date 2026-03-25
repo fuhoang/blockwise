@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Card } from "@/components/ui/Card";
+import { publicGuides } from "@/lib/public-guides";
 import { createPageMetadata } from "@/lib/seo";
 
 const plans = [
@@ -45,6 +46,38 @@ export default function PricingPage() {
             </Link>
           </Card>
         ))}
+      </div>
+      <div className="mt-12 max-w-5xl rounded-[1.75rem] border border-white/10 bg-white/5 p-8">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
+          Explore free guides first
+        </p>
+        <h2 className="mt-3 text-3xl font-black tracking-tight">
+          Learn the basics before you choose a plan.
+        </h2>
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--muted)]">
+          Public guides explain crypto basics, Bitcoin, wallets, and transactions
+          in plain language before learners move into the full product.
+        </p>
+        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {publicGuides.slice(0, 3).map((guide) => (
+            <Link
+              key={guide.id}
+              href={guide.href}
+              className="rounded-2xl border border-white/10 bg-black/20 p-5 transition hover:border-orange-500/30 hover:bg-black/30"
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                {guide.eyebrow}
+              </p>
+              <h3 className="mt-3 text-lg font-semibold">{guide.title}</h3>
+              <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
+                {guide.summary}
+              </p>
+              <span className="mt-4 inline-flex text-sm font-semibold text-[var(--accent-strong)]">
+                Read guide
+              </span>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );

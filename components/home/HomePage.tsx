@@ -1,13 +1,18 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import type { Route } from "next";
 import Link from "next/link";
 
-import { ChatWindow } from "@/components/chat/ChatWindow";
 import { moduleConfig } from "@/content/config";
 import { publicGuides } from "@/lib/public-guides";
 import { SoftAurora } from "@/components/home/SoftAurora";
+
+const ChatWindow = dynamic(
+  () => import("@/components/chat/ChatWindow").then((module) => module.ChatWindow),
+  { ssr: false },
+);
 
 const MODULE_ACCENTS = [
   {

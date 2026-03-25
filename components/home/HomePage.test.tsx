@@ -22,6 +22,27 @@ vi.mock("@/components/home/SoftAurora", () => ({
   SoftAurora: () => <div data-testid="soft-aurora" />,
 }));
 
+vi.mock("next/dynamic", () => ({
+  default:
+    () =>
+    ({
+      submittedPrompt,
+      submittedPromptVersion,
+    }: {
+      submittedPrompt?: string;
+      submittedPromptVersion?: number;
+    }) => (
+      <div
+        data-prompt={submittedPrompt ?? ""}
+        data-prompt-version={submittedPromptVersion ?? 0}
+        data-testid="chat-window"
+      >
+        <span>{submittedPrompt}</span>
+        <span>{submittedPromptVersion}</span>
+      </div>
+    ),
+}));
+
 vi.mock("@/components/chat/ChatWindow", () => ({
   ChatWindow: ({
     submittedPrompt,
@@ -114,6 +135,7 @@ describe("HomePage", () => {
     expect(screen.getByText("How crypto transactions work for beginners")).toBeInTheDocument();
     expect(screen.getByText("Common questions before you start learning.")).toBeInTheDocument();
     expect(screen.getByText("Is Blockwise for complete beginners?")).toBeInTheDocument();
+    expect(screen.getAllByText("Read guide")).toHaveLength(5);
     expect(screen.getByText("Monthly plan")).toBeInTheDocument();
     expect(screen.getByText("Yearly plan")).toBeInTheDocument();
   });
