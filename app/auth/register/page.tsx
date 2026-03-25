@@ -1,4 +1,14 @@
+import type { Metadata } from "next";
+
 import { AuthForm } from "@/components/auth/AuthForm";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createPageMetadata({
+  title: "Create account",
+  description: "Create a Blockwise account to save lesson progress, quizzes, and tutor history.",
+  pathname: "/auth/register",
+  noIndex: true,
+});
 import {
   getAuthErrorFromSearchParam,
   getAuthMessageFromSearchParam,
@@ -21,11 +31,11 @@ export default async function RegisterPage({
         <div className="max-w-2xl pt-4">
           <p className="text-sm text-zinc-500">Authentication</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
-            Create an account before wiring progress to the database.
+            Create an account to save your learning.
           </h1>
           <p className="mt-5 text-base leading-8 text-zinc-400 sm:text-lg">
-            This is the first step toward real user-owned lesson progress, quiz
-            history, and subscription state in Supabase.
+            Save lesson progress, quizzes, tutor history, and account settings
+            as you move through the live Bitcoin track and future crypto topics.
           </p>
         </div>
         <AuthForm
