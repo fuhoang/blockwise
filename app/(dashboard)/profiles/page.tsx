@@ -27,22 +27,24 @@ export default async function ProfilesPage() {
         </section>
 
         <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex flex-col gap-6">
             <div className="flex items-start gap-4">
-              <span className="inline-flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5 text-lg font-semibold text-white">
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/5 text-lg font-semibold text-white">
                 {profile.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     alt="Profile avatar"
-                    className="h-full w-full object-cover"
+                    className="absolute inset-0 h-full w-full object-cover"
                     src={profile.avatar_url}
                   />
                 ) : (
-                  (profile.display_name || profile.email || "P")
-                    .charAt(0)
-                    .toUpperCase()
+                  <span className="flex h-full w-full items-center justify-center">
+                    {(profile.display_name || profile.email || "P")
+                      .charAt(0)
+                      .toUpperCase()}
+                  </span>
                 )}
-              </span>
+              </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
                   Account overview
@@ -59,27 +61,9 @@ export default async function ProfilesPage() {
                 </p>
               </div>
             </div>
-
-            <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-zinc-300 lg:min-w-72">
-              <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-                Avatar source
-              </p>
-              <p className="mt-3 break-all leading-7">
-                {profile.avatar_url ?? "Not set yet"}
-              </p>
-            </div>
           </div>
 
-          <div className="mt-8 grid gap-4 border-t border-white/10 pt-8 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-                Timezone
-              </p>
-              <p className="mt-3 text-sm leading-7 text-zinc-200">
-                {profile.timezone ?? "Not set yet"}
-              </p>
-            </div>
-
+          <div className="mt-8 grid gap-4 border-t border-white/10 pt-8 md:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
               <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
                 Created
