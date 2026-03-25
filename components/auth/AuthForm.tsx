@@ -275,6 +275,17 @@ export function AuthForm({ mode, nextPath }: AuthFormProps) {
           />
         </label>
 
+        {mode === "login" ? (
+          <div className="flex justify-end">
+            <Link
+              className="text-sm font-medium text-zinc-400 transition hover:text-white"
+              href="/auth/forgot-password"
+            >
+              Forgot password?
+            </Link>
+          </div>
+        ) : null}
+
         {error ? (
           <p className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
             {error}

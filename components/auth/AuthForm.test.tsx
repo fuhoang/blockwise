@@ -111,6 +111,10 @@ describe("AuthForm", () => {
       method: "POST",
     });
     expect(window.location.assign).toHaveBeenCalledWith("/learn");
+    expect(screen.getByRole("link", { name: "Forgot password?" })).toHaveAttribute(
+      "href",
+      "/auth/forgot-password",
+    );
   });
 
   it("shows a success message after signup without a session", async () => {
