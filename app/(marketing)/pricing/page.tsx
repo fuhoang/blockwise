@@ -22,6 +22,7 @@ export const metadata: Metadata = createPageMetadata({
   description:
     "View Blockwise pricing for guided crypto learning plans, including the live Bitcoin curriculum, quizzes, and AI tutor support.",
   pathname: "/pricing",
+  imagePath: "/pricing/opengraph-image",
 });
 
 export default function PricingPage() {
