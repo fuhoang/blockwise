@@ -6,6 +6,9 @@ const createServerSupabaseClient = vi.fn();
 const checkRateLimit = vi.fn();
 const insert = vi.fn();
 const from = vi.fn();
+const subscriptionMaybeSingle = vi.fn();
+const subscriptionEq = vi.fn();
+const subscriptionSelect = vi.fn();
 
 vi.mock("@/lib/openai", () => ({
   createTutorReply: (message: string) => createTutorReply(message),
@@ -28,6 +31,9 @@ describe("chat route", () => {
     checkRateLimit.mockReset();
     insert.mockReset();
     from.mockReset();
+    subscriptionMaybeSingle.mockReset();
+    subscriptionEq.mockReset();
+    subscriptionSelect.mockReset();
     createServerSupabaseClient.mockResolvedValue({
       auth: {
         getUser,
@@ -46,8 +52,23 @@ describe("chat route", () => {
       remaining: 9,
       resetAt: Date.now() + 60_000,
     });
-    from.mockReturnValue({
-      insert,
+    subscriptionMaybeSingle.mockResolvedValue({ data: null });
+    subscriptionEq.mockReturnValue({
+      maybeSingle: subscriptionMaybeSingle,
+    });
+    subscriptionSelect.mockReturnValue({
+      eq: subscriptionEq,
+    });
+    from.mockImplementation((table: string) => {
+      if (table === "subscriptions") {
+        return {
+          select: subscriptionSelect,
+        };
+      }
+
+      return {
+        insert,
+      };
     });
     insert.mockResolvedValue({ error: null });
   });
@@ -120,9 +141,59 @@ describe("chat route", () => {
       usage: {
         limit: 10,
         remaining: 9,
+        plan: "free",
         resetAt: expect.any(Number),
       },
     });
+  });
+
+  it("returns a larger tutor limit for pro users", async () => {
+    subscriptionMaybeSingle.mockResolvedValue({
+      data: {
+        user_id: "user-1",
+        stripe_customer_id: "cus_123",
+        stripe_subscription_id: "sub_123",
+        stripe_price_id: "price_123",
+        plan_slug: "pro_monthly",
+        status: "active",
+        current_period_start: "2026-03-01T00:00:00.000Z",
+        current_period_end: "2026-04-01T00:00:00.000Z",
+        cancel_at_period_end: false,
+        created_at: "2026-03-01T00:00:00.000Z",
+        updated_at: "2026-03-01T00:00:00.000Z",
+      },
+    });
+    checkRateLimit.mockReturnValue({
+      allowed: true,
+      remaining: 29,
+      resetAt: Date.now() + 60_000,
+    });
+    createTutorReply.mockResolvedValue("Bitcoin reply");
+
+    const response = await POST(
+      new Request("http://localhost/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: "What is Bitcoin?" }),
+      }),
+    );
+
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      "chat:user-1",
+      30,
+      60_000,
+    );
+    await expect(response.json()).resolves.toEqual(
+      expect.objectContaining({
+        usage: expect.objectContaining({
+          limit: 30,
+          remaining: 29,
+          plan: "pro",
+        }),
+      }),
+    );
   });
 
   it("rate limits repeated tutor requests", async () => {

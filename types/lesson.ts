@@ -4,6 +4,7 @@ export interface LessonMeta {
   summary: string;
   duration: string;
   order: number;
+  requiresPro?: boolean;
   track: string;
   section?: string;
 }
@@ -17,6 +18,7 @@ export interface ModuleMeta {
   title: string;
   description: string;
   order: number;
+  requiresPro?: boolean;
   track: string;
   lessons: LessonMeta[];
 }

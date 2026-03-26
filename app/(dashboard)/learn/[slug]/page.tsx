@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { ProFeatureGate } from "@/components/billing/ProFeatureGate";
+import { hasProAccessForCurrentUser } from "@/lib/account-status";
 import { LessonContent } from "@/components/lesson/LessonContent";
 import { LessonHeader } from "@/components/lesson/LessonHeader";
 import { LessonQuizGate } from "@/components/lesson/LessonQuizGate";
@@ -45,6 +47,18 @@ export default async function LearnLessonPage({
 
   if (!lesson) {
     notFound();
+  }
+
+  const hasProAccess = await hasProAccessForCurrentUser();
+
+  if (lesson.requiresPro && !hasProAccess) {
+    return (
+      <ProFeatureGate
+        eyebrow="Pro lesson"
+        title={`${lesson.title} is part of Pro`}
+        description="This lesson sits inside the premium side of the curriculum. Upgrade to continue into advanced lessons and get stronger tutor access."
+      />
+    );
   }
 
   const adjacent = getAdjacentLessons(slug);

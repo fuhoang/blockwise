@@ -1,5 +1,8 @@
 import type { LessonMeta, ModuleMeta, TrackMeta } from "@/types/lesson";
 
+const PREMIUM_MODULE_SLUGS = new Set(["advanced-basics", "mindset-and-strategy"]);
+const PREMIUM_MODULE_SECTIONS = new Set(["Advanced Basics", "Mindset & Strategy"]);
+
 const lessonDefinitions: Omit<LessonMeta, "track">[] = [
   {
     slug: "what-is-money",
@@ -382,6 +385,7 @@ export const trackConfig: TrackMeta[] = [
 
 export const lessonConfig: LessonMeta[] = lessonDefinitions.map((lesson) => ({
   ...lesson,
+  requiresPro: PREMIUM_MODULE_SECTIONS.has(lesson.section ?? ""),
   track: "bitcoin",
 }));
 
@@ -439,6 +443,7 @@ export const moduleConfig: ModuleMeta[] = moduleDefinitions.map(
   (module, index) => ({
     ...module,
     order: index + 1,
+    requiresPro: PREMIUM_MODULE_SLUGS.has(module.slug),
     track: "bitcoin",
     lessons: lessonConfig
       .filter((lesson) => lesson.section === module.title)

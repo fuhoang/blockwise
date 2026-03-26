@@ -9,6 +9,7 @@ import { getCompletedModuleLessonCount } from "@/lib/module-progress";
 
 type LearnOverviewProps = {
   currentTrack: TrackMeta;
+  hasProAccess: boolean;
   modules: ModuleMeta[];
   totalLessons: number;
   tracks: TrackMeta[];
@@ -16,6 +17,7 @@ type LearnOverviewProps = {
 
 export function LearnOverview({
   currentTrack,
+  hasProAccess,
   modules,
   totalLessons,
   tracks,
@@ -23,6 +25,7 @@ export function LearnOverview({
   const { completedCount, completedLessonSlugs, isLessonCompleted, loaded } =
     useLessonProgress();
   const plannedTracks = tracks.filter((track) => track.status === "planned");
+  const premiumModules = modules.filter((module) => module.requiresPro);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -56,6 +59,16 @@ export function LearnOverview({
               <p className="text-sm text-zinc-400">Level</p>
               <p className="mt-1 text-lg font-semibold text-white">Beginner</p>
             </div>
+            {premiumModules.length > 0 ? (
+              <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                <p className="text-sm text-zinc-400">Premium modules</p>
+                <p className="mt-1 text-lg font-semibold text-white">
+                  {hasProAccess
+                    ? `${premiumModules.length} unlocked`
+                    : `${premiumModules.length} locked`}
+                </p>
+              </div>
+            ) : null}
             {plannedTracks.length > 0 ? (
               <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
                 <p className="text-sm text-zinc-400">Next track</p>
@@ -76,6 +89,7 @@ export function LearnOverview({
                 module,
                 completedLessonSlugs,
               );
+              const isPremiumLocked = Boolean(module.requiresPro && !hasProAccess);
 
               return (
                 <article
@@ -91,6 +105,13 @@ export function LearnOverview({
                   <p className="mt-3 text-sm leading-7 text-zinc-400">
                     {module.description}
                   </p>
+                  {module.requiresPro ? (
+                    <div className="mt-4">
+                      <span className="rounded-full border border-orange-500/20 bg-orange-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-300">
+                        Pro module
+                      </span>
+                    </div>
+                  ) : null}
                   <div className="mt-6 space-y-2">
                     <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
                       {loaded
@@ -118,6 +139,9 @@ export function LearnOverview({
                             </div>
                             <span
                               className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${
+                                isPremiumLocked
+                                  ? "border border-orange-500/20 bg-orange-500/10 text-orange-300"
+                                :
                                 !loaded
                                   ? "border border-white/10 bg-black/40 text-zinc-500"
                                   : completed
@@ -125,7 +149,13 @@ export function LearnOverview({
                                   : "border border-white/10 bg-white/[0.04] text-zinc-400"
                               }`}
                             >
-                              {!loaded ? "Syncing" : completed ? "Completed" : "Pending"}
+                              {isPremiumLocked
+                                ? "Pro"
+                                : !loaded
+                                  ? "Syncing"
+                                  : completed
+                                    ? "Completed"
+                                    : "Pending"}
                             </span>
                           </div>
                         </div>
@@ -134,10 +164,14 @@ export function LearnOverview({
                   </div>
                   <div className="mt-auto pt-8">
                     <Link
-                      href={`/learn/module/${module.slug}`}
-                      className="inline-flex w-full items-center justify-center rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-black transition hover:bg-orange-400"
+                      href={isPremiumLocked ? "/purchases" : `/learn/module/${module.slug}`}
+                      className={`inline-flex w-full items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold transition ${
+                        isPremiumLocked
+                          ? "border border-orange-500/20 bg-orange-500/10 text-orange-200 hover:bg-orange-500/15"
+                          : "bg-orange-500 text-black hover:bg-orange-400"
+                      }`}
                     >
-                      Open module
+                      {isPremiumLocked ? "Unlock with Pro" : "Open module"}
                     </Link>
                   </div>
                 </article>
