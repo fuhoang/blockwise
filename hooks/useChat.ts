@@ -7,6 +7,7 @@ import type { ChatMessage } from "@/types/chat";
 
 type TutorUsage = {
   limit: number;
+  plan: "free" | "pro";
   remaining: number;
   resetAt: number;
 };
