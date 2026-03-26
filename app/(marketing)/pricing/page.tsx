@@ -69,30 +69,14 @@ export default function PricingPage() {
       <section className="border-b border-white/10 px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-8 sm:p-10">
-            <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">
-              Pricing
-            </p>
-            <div className="mt-4 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-              <div>
+            <div className="mt-4 flex justify-center">
+              <div className="max-w-3xl text-center">
                 <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-                  Clear pricing for learners who want a stronger crypto foundation.
+                  Simple plans for beginners and committed learners.
                 </h1>
-                <p className="mt-5 max-w-2xl text-base leading-8 text-zinc-400 sm:text-lg">
-                  Start free with the live Bitcoin track, then upgrade when you
-                  want stronger tutor access, subscription billing tools, and the
-                  first premium layers of Blockwise.
-                </p>
-              </div>
-              <div className="rounded-[1.75rem] border border-orange-500/20 bg-orange-500/10 p-6">
-                <p className="text-xs uppercase tracking-[0.18em] text-orange-300">
-                  Current launch model
-                </p>
-                <p className="mt-3 text-2xl font-semibold text-white">
-                  Free to start, Pro when you want more.
-                </p>
-                <p className="mt-3 text-sm leading-7 text-orange-100/80">
-                  The free plan stays genuinely useful. Pro is there for deeper
-                  usage, future premium tracks, and account-level billing tools.
+                <p className="mt-5 text-base leading-8 text-zinc-400 sm:text-lg">
+                  Learn the basics for free, then upgrade when you want more
+                  depth.
                 </p>
               </div>
             </div>
