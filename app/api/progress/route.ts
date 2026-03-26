@@ -27,6 +27,7 @@ async function writeCookieProgress(progress: typeof EMPTY_LESSON_PROGRESS) {
     ...progress,
     updatedAt: new Date().toISOString(),
   });
+  response.headers.set("x-progress-viewer-id", "anonymous");
 
   response.cookies.set(PROGRESS_COOKIE, JSON.stringify(progress), {
     // The fallback cookie is API-owned state, not client-owned application state.
@@ -55,6 +56,7 @@ async function readSupabaseProgress() {
     return {
       progress: EMPTY_LESSON_PROGRESS,
       persisted: false,
+      userId: null,
     };
   }
 
@@ -72,6 +74,7 @@ async function readSupabaseProgress() {
       completedLessonSlugs: data.map((row) => row.lesson_slug),
     }),
     persisted: true,
+    userId: user.id,
   };
 }
 
@@ -93,6 +96,7 @@ async function writeSupabaseProgress(progress: typeof EMPTY_LESSON_PROGRESS) {
         { status: 401 },
       ),
       saved: false,
+      userId: null,
     };
   }
 
@@ -142,12 +146,17 @@ async function writeSupabaseProgress(progress: typeof EMPTY_LESSON_PROGRESS) {
   }
 
   return {
-    response: NextResponse.json({
-      saved: true,
-      ...progress,
-      updatedAt: new Date().toISOString(),
-    }),
+    response: (() => {
+      const response = NextResponse.json({
+        saved: true,
+        ...progress,
+        updatedAt: new Date().toISOString(),
+      });
+      response.headers.set("x-progress-viewer-id", user.id);
+      return response;
+    })(),
     saved: true,
+    userId: user.id,
   };
 }
 
@@ -165,10 +174,14 @@ export async function GET() {
   const stored = await readSupabaseProgress();
 
   if (stored) {
-    return NextResponse.json(stored.progress);
+    const response = NextResponse.json(stored.progress);
+    response.headers.set("x-progress-viewer-id", stored.userId ?? "anonymous");
+    return response;
   }
 
-  return NextResponse.json(await readCookieProgress());
+  const response = NextResponse.json(await readCookieProgress());
+  response.headers.set("x-progress-viewer-id", "anonymous");
+  return response;
 }
 
 export async function POST(request: Request) {
