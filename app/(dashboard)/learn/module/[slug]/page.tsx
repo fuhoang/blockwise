@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { ProFeatureGate } from "@/components/billing/ProFeatureGate";
 import ModuleOverview from "@/components/learn/ModuleOverview";
+import { hasProAccessForCurrentUser } from "@/lib/account-status";
 import { getModuleBySlug } from "@/lib/lessons";
 import { createPageMetadata } from "@/lib/seo";
 
@@ -40,6 +42,18 @@ export default async function LearnModulePage({
 
   if (!currentModule) {
     notFound();
+  }
+
+  const hasProAccess = await hasProAccessForCurrentUser();
+
+  if (currentModule.requiresPro && !hasProAccess) {
+    return (
+      <ProFeatureGate
+        eyebrow="Pro module"
+        title={`${currentModule.title} is part of Pro`}
+        description="This module is reserved for Pro members. Upgrade to unlock advanced lessons, deeper tutor access, and the premium side of the curriculum."
+      />
+    );
   }
 
   return <ModuleOverview module={currentModule} />;

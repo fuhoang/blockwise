@@ -5,9 +5,14 @@ import LearnLessonPage from "@/app/(dashboard)/learn/[slug]/page";
 const notFound = vi.fn(() => {
   throw new Error("notFound");
 });
+const hasProAccessForCurrentUser = vi.fn();
 
 vi.mock("next/navigation", () => ({
   notFound: () => notFound(),
+}));
+
+vi.mock("@/lib/account-status", () => ({
+  hasProAccessForCurrentUser: () => hasProAccessForCurrentUser(),
 }));
 
 vi.mock("@/components/lesson/LessonContent", () => ({
@@ -56,9 +61,17 @@ vi.mock("@/components/lesson/ProgressBar", () => ({
   ),
 }));
 
+vi.mock("@/components/billing/ProFeatureGate", () => ({
+  ProFeatureGate: ({ title }: { title: string }) => (
+    <div data-testid="pro-feature-gate">{title}</div>
+  ),
+}));
+
 describe("learn lesson page route", () => {
   beforeEach(() => {
     notFound.mockClear();
+    hasProAccessForCurrentUser.mockReset();
+    hasProAccessForCurrentUser.mockResolvedValue(false);
   });
 
   it("renders the lesson route with module context and quiz data", async () => {
@@ -79,6 +92,18 @@ describe("learn lesson page route", () => {
       "2",
     );
     expect(screen.getByTestId("progress-bar")).toHaveTextContent("2");
+  });
+
+  it("renders the pro gate for premium lessons when the user is free", async () => {
+    const page = await LearnLessonPage({
+      params: Promise.resolve({ slug: "nodes-explained" }),
+    });
+
+    render(page);
+
+    expect(screen.getByTestId("pro-feature-gate")).toHaveTextContent(
+      "Nodes Explained is part of Pro",
+    );
   });
 
   it("calls notFound for an unknown lesson slug", async () => {

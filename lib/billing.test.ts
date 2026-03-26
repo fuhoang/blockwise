@@ -1,4 +1,8 @@
-import { getAccountStatus } from "@/lib/billing";
+import {
+  getAccountStatus,
+  getTutorRequestLimit,
+  hasProAccess,
+} from "@/lib/billing";
 import type { BillingSnapshot } from "@/types/billing";
 
 function createSnapshot(overrides: Partial<BillingSnapshot> = {}): BillingSnapshot {
@@ -32,27 +36,38 @@ describe("billing helpers", () => {
   });
 
   it("returns a pro status when an active subscription exists", () => {
-    const status = getAccountStatus(
-      createSnapshot({
-        subscription: {
-          user_id: "user-1",
-          stripe_customer_id: "cus_123",
-          stripe_subscription_id: "sub_123",
-          stripe_price_id: "price_123",
-          plan_slug: "pro_monthly",
-          status: "active",
-          current_period_start: "2026-03-01T00:00:00.000Z",
-          current_period_end: "2026-04-01T00:00:00.000Z",
-          cancel_at_period_end: false,
-          created_at: "2026-03-01T00:00:00.000Z",
-          updated_at: "2026-03-01T00:00:00.000Z",
-        },
-      }),
-    );
+    const snapshot = createSnapshot({
+      subscription: {
+        user_id: "user-1",
+        stripe_customer_id: "cus_123",
+        stripe_subscription_id: "sub_123",
+        stripe_price_id: "price_123",
+        plan_slug: "pro_monthly",
+        status: "active",
+        current_period_start: "2026-03-01T00:00:00.000Z",
+        current_period_end: "2026-04-01T00:00:00.000Z",
+        cancel_at_period_end: false,
+        created_at: "2026-03-01T00:00:00.000Z",
+        updated_at: "2026-03-01T00:00:00.000Z",
+      },
+    });
+    const status = getAccountStatus(snapshot);
 
     expect(status.planLabel).toBe("Pro");
     expect(status.headline).toBe("Pro monthly");
     expect(status.billingStatus).toBe("Active subscription");
     expect(status.checkoutCtaLabel).toBe("Change plan");
+    expect(hasProAccess(snapshot)).toBe(true);
+    expect(getTutorRequestLimit(snapshot)).toBe(30);
+  });
+
+  it("keeps free users on the lower tutor limit", () => {
+    const status = getAccountStatus(
+      createSnapshot(),
+    );
+
+    expect(status.planLabel).toBe("Free");
+    expect(hasProAccess(createSnapshot())).toBe(false);
+    expect(getTutorRequestLimit(createSnapshot())).toBe(10);
   });
 });

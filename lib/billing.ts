@@ -47,6 +47,10 @@ const UPCOMING_FEATURES = [
   "Expanded tutor access and premium account insights",
 ];
 
+const PRO_ACCESS_STATUSES: BillingStatus[] = ["active", "trialing", "past_due"];
+const FREE_TUTOR_REQUEST_LIMIT = 10;
+const PRO_TUTOR_REQUEST_LIMIT = 30;
+
 function toIsoTimestamp(value: number | null | undefined) {
   return typeof value === "number" ? new Date(value * 1000).toISOString() : null;
 }
@@ -67,6 +71,19 @@ export function getDefaultBillingSnapshot(): BillingSnapshot {
     purchaseEvents: [],
     subscription: null,
   };
+}
+
+export function hasProAccess(snapshot: BillingSnapshot) {
+  return Boolean(
+    snapshot.subscription &&
+      PRO_ACCESS_STATUSES.includes(snapshot.subscription.status),
+  );
+}
+
+export function getTutorRequestLimit(snapshot: BillingSnapshot) {
+  return hasProAccess(snapshot)
+    ? PRO_TUTOR_REQUEST_LIMIT
+    : FREE_TUTOR_REQUEST_LIMIT;
 }
 
 export function getAccountStatus(snapshot: BillingSnapshot): AccountStatus {
@@ -193,6 +210,10 @@ export async function getBillingSnapshotForCurrentUser(): Promise<BillingSnapsho
 
 export async function getAccountStatusForCurrentUser() {
   return getAccountStatus(await getBillingSnapshotForCurrentUser());
+}
+
+export async function hasProAccessForCurrentUser() {
+  return hasProAccess(await getBillingSnapshotForCurrentUser());
 }
 
 export async function getBillingContextForCurrentUser() {

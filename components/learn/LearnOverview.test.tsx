@@ -53,6 +53,26 @@ const modules: ModuleMeta[] = [
       },
     ],
   },
+  {
+    slug: "advanced-basics",
+    title: "Advanced Basics",
+    description: "Level up understanding",
+    order: 2,
+    requiresPro: true,
+    track: "bitcoin",
+    lessons: [
+      {
+        slug: "nodes-explained",
+        title: "Nodes Explained",
+        summary: "Nodes basics",
+        duration: "8 min",
+        order: 36,
+        requiresPro: true,
+        track: "bitcoin",
+        section: "Advanced Basics",
+      },
+    ],
+  },
 ];
 
 const tracks: TrackMeta[] = [
@@ -89,23 +109,30 @@ describe("LearnOverview", () => {
     render(
       <LearnOverview
         currentTrack={tracks[0]}
+        hasProAccess={false}
         modules={modules}
-        totalLessons={2}
+        totalLessons={3}
         tracks={tracks}
       />,
     );
 
-    expect(screen.getAllByText("1 of 2 lessons completed")).toHaveLength(2);
+    expect(screen.getByText("1 of 3 lessons completed")).toBeInTheDocument();
     expect(screen.getByText("Active track")).toBeInTheDocument();
     expect(screen.getByText("Bitcoin")).toBeInTheDocument();
     expect(screen.getByText("Next track")).toBeInTheDocument();
     expect(screen.getByText("Ethereum")).toBeInTheDocument();
     expect(screen.getByText("Foundations")).toBeInTheDocument();
+    expect(screen.getByText("Advanced Basics")).toBeInTheDocument();
     expect(screen.getByText("Completed")).toBeInTheDocument();
     expect(screen.getByText("Pending")).toBeInTheDocument();
+    expect(screen.getByText("Pro")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open module" })).toHaveAttribute(
       "href",
       "/learn/module/foundations",
+    );
+    expect(screen.getByRole("link", { name: "Unlock with Pro" })).toHaveAttribute(
+      "href",
+      "/purchases",
     );
   });
 });

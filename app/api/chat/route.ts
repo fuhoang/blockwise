@@ -1,17 +1,20 @@
 import { NextResponse } from "next/server";
 
+import { getTutorRequestLimit, hasProAccess } from "@/lib/billing";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createTutorReply, inferTutorTopic } from "@/lib/openai";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const MAX_MESSAGE_LENGTH = 500;
-const CHAT_RATE_LIMIT = 10;
 const CHAT_RATE_WINDOW_MS = 60_000;
 const TUTOR_PROMPT_PREVIEW_MAX = 160;
 
-function buildTutorUsage(limitResult: { remaining: number; resetAt: number }) {
+function buildTutorUsage(
+  limit: number,
+  limitResult: { remaining: number; resetAt: number },
+) {
   return {
-    limit: CHAT_RATE_LIMIT,
+    limit,
     remaining: limitResult.remaining,
     resetAt: limitResult.resetAt,
   };
@@ -39,9 +42,24 @@ export async function POST(request: Request) {
       );
     }
 
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select(
+        "user_id, stripe_customer_id, stripe_subscription_id, stripe_price_id, plan_slug, status, current_period_start, current_period_end, cancel_at_period_end, created_at, updated_at",
+      )
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const tutorRequestLimit = getTutorRequestLimit({
+      configured: true,
+      customerId: null,
+      purchaseEvents: [],
+      subscription: subscription ?? null,
+    });
+
     const limitResult = checkRateLimit(
       `chat:${user.id}`,
-      CHAT_RATE_LIMIT,
+      tutorRequestLimit,
       CHAT_RATE_WINDOW_MS,
     );
 
@@ -99,7 +117,17 @@ export async function POST(request: Request) {
       reply,
       recordedAt,
       topic,
-      usage: buildTutorUsage(limitResult),
+      usage: {
+        ...buildTutorUsage(tutorRequestLimit, limitResult),
+        plan: hasProAccess({
+          configured: true,
+          customerId: null,
+          purchaseEvents: [],
+          subscription: subscription ?? null,
+        })
+          ? "pro"
+          : "free",
+      },
     });
   } catch {
     return NextResponse.json(
