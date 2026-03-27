@@ -22,7 +22,17 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = (await request.json()) as CheckoutBody;
+  let body: CheckoutBody;
+
+  try {
+    body = (await request.json()) as CheckoutBody;
+  } catch {
+    return NextResponse.json(
+      { error: "Send a valid checkout request body." },
+      { status: 400 },
+    );
+  }
+
   const plan = body.plan;
 
   if (plan !== "pro_monthly" && plan !== "pro_yearly") {
@@ -66,6 +76,13 @@ export async function POST(request: Request) {
     mode: "subscription",
     success_url: getSuccessUrl(),
   });
+
+  if (!session.url) {
+    return NextResponse.json(
+      { error: "Unable to start checkout right now." },
+      { status: 502 },
+    );
+  }
 
   return NextResponse.json({
     checkoutUrl: session.url,
