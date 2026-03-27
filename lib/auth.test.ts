@@ -1,7 +1,7 @@
 import {
   authPrefixes,
+  authProxyPrefixes,
   isAuthRoute,
-  protectedPrefixes,
   routeRequiresAuth,
 } from "@/lib/auth";
 import { config as proxyConfig } from "@/proxy";
@@ -27,11 +27,10 @@ describe("auth route helpers", () => {
   it("keeps proxy matchers aligned with protected and auth routes", () => {
     const matcherSet = new Set(proxyConfig.matcher);
 
-    protectedPrefixes.forEach((prefix) => {
+    authProxyPrefixes.forEach((prefix) => {
       expect(matcherSet).toContain(`${prefix}/:path*`);
     });
 
-    expect(matcherSet).toContain("/auth/:path*");
     authPrefixes.forEach((prefix) => {
       expect(isAuthRoute(prefix)).toBe(true);
     });
