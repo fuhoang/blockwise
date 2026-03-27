@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import PurchasesPage from "@/app/(dashboard)/purchases/page";
 
@@ -16,6 +16,10 @@ vi.mock("@/components/purchases/BillingActions", () => ({
   }) => (
     <div>{canOpenPortal ? "Checkout and portal actions" : "Checkout actions"}</div>
   ),
+}));
+
+vi.mock("@/components/purchases/UpgradeFunnel", () => ({
+  UpgradeFunnel: () => <div>Upgrade funnel</div>,
 }));
 
 describe("purchases page route", () => {
@@ -66,11 +70,6 @@ describe("purchases page route", () => {
     expect(
       screen.getByRole("heading", { level: 2, name: "Free plan" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText("No purchases are linked to this account yet."),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Billing actions")).toBeInTheDocument();
-    expect(screen.getByText("Checkout actions")).toBeInTheDocument();
     expect(screen.getByText("Satoshi")).toBeInTheDocument();
     expect(screen.getByText("10 tutor requests per minute")).toBeInTheDocument();
     expect(
@@ -80,6 +79,14 @@ describe("purchases page route", () => {
     expect(screen.getByText("Monthly or yearly Pro")).toBeInTheDocument();
     expect(screen.getByText("Advanced Basics")).toBeInTheDocument();
     expect(screen.getByText("Mindset & Strategy")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Billings" }));
+
+    expect(
+      screen.getByText("No purchases are linked to this account yet."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Billing actions")).toBeInTheDocument();
+    expect(screen.getByText("Checkout actions")).toBeInTheDocument();
     expect(
       screen.getByText("Priority learning tracks and future premium modules"),
     ).toBeInTheDocument();
@@ -151,10 +158,11 @@ describe("purchases page route", () => {
 
     render(page);
 
-    expect(screen.getByText("Invoice Paid")).toBeInTheDocument();
-    expect(screen.getByText("19.00 GBP")).toBeInTheDocument();
     expect(screen.getByText("30 tutor requests per minute")).toBeInTheDocument();
     expect(screen.getByText("2 premium modules unlocked")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Billings" }));
+
     expect(screen.getByText("Next renewal")).toBeInTheDocument();
     expect(screen.getByText("01 Apr 2026")).toBeInTheDocument();
     expect(screen.getByText("Monthly billing")).toBeInTheDocument();
@@ -164,6 +172,12 @@ describe("purchases page route", () => {
     expect(
       screen.getByText("Checkout and portal actions"),
     ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "History purchases" }));
+
+    expect(screen.getByText("Invoice Paid")).toBeInTheDocument();
+    expect(screen.getByText("19.00 GBP")).toBeInTheDocument();
+    expect(screen.getByText("Upgrade funnel")).toBeInTheDocument();
   });
 
   it("renders cancellation timing when the subscription will end at period end", async () => {
@@ -218,6 +232,8 @@ describe("purchases page route", () => {
     const page = await PurchasesPage();
 
     render(page);
+
+    fireEvent.click(screen.getByRole("tab", { name: "Billings" }));
 
     expect(screen.getByText("Access ends")).toBeInTheDocument();
     expect(screen.getByText("01 Apr 2026")).toBeInTheDocument();
