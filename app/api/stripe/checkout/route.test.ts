@@ -71,6 +71,39 @@ describe("stripe checkout route", () => {
     expect(response.status).toBe(400);
   });
 
+  it("rejects malformed request bodies", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{not-json",
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Send a valid checkout request body.",
+    });
+  });
+
+  it("returns a configuration error when plan details are unavailable", async () => {
+    getPlanDetails.mockReturnValue(null);
+
+    const response = await POST(
+      new Request("http://localhost/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: "pro_monthly" }),
+      }),
+    );
+
+    expect(createSession).not.toHaveBeenCalled();
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      error: "Stripe billing is not configured yet.",
+    });
+  });
+
   it("requires an authenticated user", async () => {
     ensureStripeCustomerForCurrentUser.mockResolvedValue(null);
 
@@ -105,6 +138,25 @@ describe("stripe checkout route", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
       checkoutUrl: "https://checkout.stripe.com/session/test",
+    });
+  });
+
+  it("fails when stripe does not return a checkout URL", async () => {
+    createSession.mockResolvedValue({
+      url: null,
+    });
+
+    const response = await POST(
+      new Request("http://localhost/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: "pro_monthly" }),
+      }),
+    );
+
+    expect(response.status).toBe(502);
+    await expect(response.json()).resolves.toEqual({
+      error: "Unable to start checkout right now.",
     });
   });
 });
