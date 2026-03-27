@@ -71,6 +71,10 @@ const PRICING_PLANS = [
   },
 ] as const;
 
+type HomePageProps = {
+  currentPlanSlug?: string | null;
+};
+
 const PUBLIC_GUIDES = publicGuides;
 const HOME_FAQ = [
   {
@@ -95,7 +99,7 @@ const HOME_FAQ = [
   },
 ] as const;
 
-export default function HomePage() {
+export default function HomePage({ currentPlanSlug = null }: HomePageProps) {
   const [prompt, setPrompt] = useState("");
   const [submittedPrompt, setSubmittedPrompt] = useState("");
   const [promptVersion, setPromptVersion] = useState(0);
@@ -383,12 +387,21 @@ export default function HomePage() {
                 <p className="mt-4 text-sm leading-7 text-zinc-400">
                   {plan.description}
                 </p>
-                <Link
-                  href={plan.href}
-                  className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-black transition hover:bg-orange-400"
-                >
-                  {plan.cta}
-                </Link>
+                {isCurrentPlan(plan.href, currentPlanSlug) ? (
+                  <span
+                    aria-disabled="true"
+                    className="mt-6 inline-flex w-full cursor-not-allowed items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-sm font-semibold text-emerald-200 opacity-90"
+                  >
+                    Current subscription
+                  </span>
+                ) : (
+                  <Link
+                    href={plan.href}
+                    className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-black transition hover:bg-orange-400"
+                  >
+                    {getPlanCtaLabel(plan.href, currentPlanSlug, plan.cta)}
+                  </Link>
+                )}
                 {plan.footnote ? (
                   <p className="mt-3 text-center text-xs text-zinc-500">
                     {plan.footnote}
@@ -401,4 +414,27 @@ export default function HomePage() {
       </section>
     </main>
   );
+}
+
+function isCurrentPlan(href: Route, currentPlanSlug: string | null) {
+  return (
+    (href === "/purchases?plan=pro_monthly" && currentPlanSlug === "pro_monthly") ||
+    (href === "/purchases?plan=pro_yearly" && currentPlanSlug === "pro_yearly")
+  );
+}
+
+function getPlanCtaLabel(
+  href: Route,
+  currentPlanSlug: string | null,
+  defaultLabel: string,
+) {
+  if (href === "/purchases?plan=pro_monthly" && currentPlanSlug === "pro_yearly") {
+    return "Downgrade to monthly";
+  }
+
+  if (href === "/purchases?plan=pro_yearly" && currentPlanSlug === "pro_monthly") {
+    return "Upgrade to yearly";
+  }
+
+  return defaultLabel;
 }

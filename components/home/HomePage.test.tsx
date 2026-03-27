@@ -140,4 +140,23 @@ describe("HomePage", () => {
     expect(screen.getByText("Monthly plan")).toBeInTheDocument();
     expect(screen.getByText("Yearly plan")).toBeInTheDocument();
   });
+
+  it("disables the monthly CTA when the user is already on Pro monthly", () => {
+    render(<HomePage currentPlanSlug="pro_monthly" />);
+
+    expect(screen.getByText("Current subscription")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Upgrade to yearly" })).toHaveAttribute(
+      "href",
+      "/purchases?plan=pro_yearly",
+    );
+  });
+
+  it("shows a downgrade CTA for monthly when the user is on Pro yearly", () => {
+    render(<HomePage currentPlanSlug="pro_yearly" />);
+
+    expect(
+      screen.getByRole("link", { name: "Downgrade to monthly" }),
+    ).toHaveAttribute("href", "/purchases?plan=pro_monthly");
+    expect(screen.getByText("Current subscription")).toBeInTheDocument();
+  });
 });
