@@ -39,6 +39,17 @@ describe("stripe portal route", () => {
     expect(response.status).toBe(401);
   });
 
+  it("treats empty portal URLs as unavailable", async () => {
+    createBillingPortalSessionForCurrentUser.mockResolvedValue("");
+
+    const response = await POST();
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "Unable to open billing portal for this account.",
+    });
+  });
+
   it("returns a billing portal URL", async () => {
     const response = await POST();
 
