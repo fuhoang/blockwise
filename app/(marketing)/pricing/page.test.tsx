@@ -6,6 +6,14 @@ import PricingPage from "@/app/(marketing)/pricing/page";
 const getBillingSnapshotForCurrentUser = vi.fn();
 const hasProAccess = vi.fn();
 
+vi.mock("@/components/billing/CheckoutButton", () => ({
+  CheckoutButton: ({
+    label,
+  }: {
+    label: string;
+  }) => <button type="button">{label}</button>,
+}));
+
 vi.mock("next/link", () => ({
   default: ({
     children,
@@ -50,10 +58,9 @@ describe("pricing page", () => {
     render(page);
 
     expect(screen.getByText("Current subscription")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Upgrade to yearly" })).toHaveAttribute(
-      "href",
-      "/purchases?plan=pro_yearly",
-    );
+    expect(
+      screen.getByRole("button", { name: "Upgrade to yearly" }),
+    ).toBeInTheDocument();
   });
 
   it("shows a downgrade CTA for monthly when the user is on Pro yearly", async () => {
@@ -74,8 +81,8 @@ describe("pricing page", () => {
     render(page);
 
     expect(
-      screen.getByRole("link", { name: "Downgrade to monthly" }),
-    ).toHaveAttribute("href", "/purchases?plan=pro_monthly");
+      screen.getByRole("button", { name: "Downgrade to monthly" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Current subscription")).toBeInTheDocument();
   });
 
@@ -92,13 +99,7 @@ describe("pricing page", () => {
 
     render(page);
 
-    expect(screen.getByRole("link", { name: "Upgrade to Pro" })).toHaveAttribute(
-      "href",
-      "/purchases?plan=pro_monthly",
-    );
-    expect(screen.getByRole("link", { name: "Choose yearly" })).toHaveAttribute(
-      "href",
-      "/purchases?plan=pro_yearly",
-    );
+    expect(screen.getByRole("button", { name: "Upgrade to Pro" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Choose yearly" })).toBeInTheDocument();
   });
 });

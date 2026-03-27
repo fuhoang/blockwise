@@ -3,6 +3,14 @@ import type { ReactNode } from "react";
 
 import HomePage from "@/components/home/HomePage";
 
+vi.mock("@/components/billing/CheckoutButton", () => ({
+  CheckoutButton: ({
+    label,
+  }: {
+    label: string;
+  }) => <button type="button">{label}</button>,
+}));
+
 vi.mock("next/link", () => ({
   default: ({
     children,
@@ -145,18 +153,17 @@ describe("HomePage", () => {
     render(<HomePage currentPlanSlug="pro_monthly" />);
 
     expect(screen.getByText("Current subscription")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Upgrade to yearly" })).toHaveAttribute(
-      "href",
-      "/purchases?plan=pro_yearly",
-    );
+    expect(
+      screen.getByRole("button", { name: "Upgrade to yearly" }),
+    ).toBeInTheDocument();
   });
 
   it("shows a downgrade CTA for monthly when the user is on Pro yearly", () => {
     render(<HomePage currentPlanSlug="pro_yearly" />);
 
     expect(
-      screen.getByRole("link", { name: "Downgrade to monthly" }),
-    ).toHaveAttribute("href", "/purchases?plan=pro_monthly");
+      screen.getByRole("button", { name: "Downgrade to monthly" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Current subscription")).toBeInTheDocument();
   });
 });

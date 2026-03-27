@@ -2,9 +2,9 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import type { Route } from "next";
 import Link from "next/link";
 
+import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { moduleConfig } from "@/content/config";
 import { publicGuides } from "@/lib/public-guides";
 import { SoftAurora } from "@/components/home/SoftAurora";
@@ -44,7 +44,7 @@ const MODULE_ACCENTS = [
 const MODULES = moduleConfig.slice(0, 3).map((module, index) => ({
   ...module,
   cta: "Open module",
-  href: `/learn/module/${module.slug}` as Route,
+  href: `/learn/module/${module.slug}`,
   ...MODULE_ACCENTS[index % MODULE_ACCENTS.length],
 }));
 
@@ -57,7 +57,7 @@ const PRICING_PLANS = [
       "Full curriculum, more AI usage, quizzes, progress tracking, and deeper security lessons.",
     footnote: null,
     cta: "Start monthly plan",
-    href: "/purchases?plan=pro_monthly" as Route,
+    plan: "pro_monthly" as const,
   },
   {
     name: "Yearly plan",
@@ -67,7 +67,7 @@ const PRICING_PLANS = [
       "Full curriculum, more AI usage, quizzes, progress tracking, and deeper security lessons with a fixed annual price.",
     footnote: "Save compared with the monthly plan.",
     cta: "Start yearly plan",
-    href: "/purchases?plan=pro_yearly" as Route,
+    plan: "pro_yearly" as const,
   },
 ] as const;
 
@@ -387,7 +387,7 @@ export default function HomePage({ currentPlanSlug = null }: HomePageProps) {
                 <p className="mt-4 text-sm leading-7 text-zinc-400">
                   {plan.description}
                 </p>
-                {isCurrentPlan(plan.href, currentPlanSlug) ? (
+                {isCurrentPlan(plan.plan, currentPlanSlug) ? (
                   <span
                     aria-disabled="true"
                     className="mt-6 inline-flex w-full cursor-not-allowed items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-sm font-semibold text-emerald-200 opacity-90"
@@ -395,12 +395,12 @@ export default function HomePage({ currentPlanSlug = null }: HomePageProps) {
                     Current subscription
                   </span>
                 ) : (
-                  <Link
-                    href={plan.href}
-                    className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-black transition hover:bg-orange-400"
-                  >
-                    {getPlanCtaLabel(plan.href, currentPlanSlug, plan.cta)}
-                  </Link>
+                  <CheckoutButton
+                    className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-black transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
+                    label={getPlanCtaLabel(plan.plan, currentPlanSlug, plan.cta)}
+                    loadingLabel="Opening checkout..."
+                    plan={plan.plan}
+                  />
                 )}
                 {plan.footnote ? (
                   <p className="mt-3 text-center text-xs text-zinc-500">
@@ -416,23 +416,26 @@ export default function HomePage({ currentPlanSlug = null }: HomePageProps) {
   );
 }
 
-function isCurrentPlan(href: Route, currentPlanSlug: string | null) {
+function isCurrentPlan(
+  plan: "pro_monthly" | "pro_yearly",
+  currentPlanSlug: string | null,
+) {
   return (
-    (href === "/purchases?plan=pro_monthly" && currentPlanSlug === "pro_monthly") ||
-    (href === "/purchases?plan=pro_yearly" && currentPlanSlug === "pro_yearly")
+    (plan === "pro_monthly" && currentPlanSlug === "pro_monthly") ||
+    (plan === "pro_yearly" && currentPlanSlug === "pro_yearly")
   );
 }
 
 function getPlanCtaLabel(
-  href: Route,
+  plan: "pro_monthly" | "pro_yearly",
   currentPlanSlug: string | null,
   defaultLabel: string,
 ) {
-  if (href === "/purchases?plan=pro_monthly" && currentPlanSlug === "pro_yearly") {
+  if (plan === "pro_monthly" && currentPlanSlug === "pro_yearly") {
     return "Downgrade to monthly";
   }
 
-  if (href === "/purchases?plan=pro_yearly" && currentPlanSlug === "pro_monthly") {
+  if (plan === "pro_yearly" && currentPlanSlug === "pro_monthly") {
     return "Upgrade to yearly";
   }
 
