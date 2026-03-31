@@ -43,9 +43,12 @@ export function HomeHeroSection() {
       return;
     }
 
+    const demoNode = demoElement;
+    const headerNode = headerElement;
+
     function syncPanelHeight() {
-      const demoRect = demoElement.getBoundingClientRect();
-      const headerRect = headerElement.getBoundingClientRect();
+      const demoRect = demoNode.getBoundingClientRect();
+      const headerRect = headerNode.getBoundingClientRect();
       const availableHeight = demoRect.top - headerRect.bottom - 12;
 
       setPanelHeight(Math.max(240, Math.round(availableHeight)));
@@ -54,8 +57,8 @@ export function HomeHeroSection() {
     syncPanelHeight();
 
     const observer = new ResizeObserver(syncPanelHeight);
-    observer.observe(demoElement);
-    observer.observe(headerElement);
+    observer.observe(demoNode);
+    observer.observe(headerNode);
     window.addEventListener("resize", syncPanelHeight);
 
     return () => {
