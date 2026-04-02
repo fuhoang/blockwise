@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+import { parseJsonBody } from "@/lib/api-route";
 import { EMPTY_LESSON_PROGRESS, sanitizeLessonProgress } from "@/lib/progress";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -199,20 +200,16 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  let body:
+  const bodyResult = await parseJsonBody<
     | { slug?: string; complete?: boolean }
-    | { completedLessonSlugs?: string[] };
+    | { completedLessonSlugs?: string[] }
+  >(request, "Send a valid progress update body.");
 
-  try {
-    body = (await request.json()) as
-      | { slug?: string; complete?: boolean }
-      | { completedLessonSlugs?: string[] };
-  } catch {
-    return NextResponse.json(
-      { error: "Send a valid progress update body." },
-      { status: 400 },
-    );
+  if ("response" in bodyResult) {
+    return bodyResult.response;
   }
+
+  const body = bodyResult.data;
 
   const current = await readWritableBaseProgress();
   const hasCompletedLessonSlugs =

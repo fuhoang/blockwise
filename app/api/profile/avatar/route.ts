@@ -1,8 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
+import {
+  getAuthenticatedServerSupabaseOrError,
+  jsonError,
+  parseJsonBody,
+} from "@/lib/api-route";
 import { getSupabaseBrowserEnv } from "@/lib/supabase/config";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -42,75 +46,34 @@ function getAvatarStoragePath(avatarUrl: string, userId: string) {
 }
 
 export async function POST(request: Request) {
-  let supabase;
+  const authResult = await getAuthenticatedServerSupabaseOrError({
+    unauthorizedMessage: "You must be logged in to upload an avatar.",
+  });
 
-  try {
-    supabase = await createServerSupabaseClient();
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to reach Supabase right now." },
-      { status: 503 },
-    );
+  if ("response" in authResult) {
+    return authResult.response;
   }
 
-  if (!supabase) {
-    return NextResponse.json(
-      { error: "Supabase is not configured." },
-      { status: 500 },
-    );
-  }
-
-  let user;
-
-  try {
-    ({
-      data: { user },
-    } = await supabase.auth.getUser());
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to verify your account right now." },
-      { status: 503 },
-    );
-  }
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "You must be logged in to upload an avatar." },
-      { status: 401 },
-    );
-  }
-
+  const { supabase, user } = authResult;
   let formData;
 
   try {
     formData = await request.formData();
   } catch {
-    return NextResponse.json(
-      { error: "Send a valid avatar upload body." },
-      { status: 400 },
-    );
+    return jsonError("Send a valid avatar upload body.", 400);
   }
   const file = formData.get("file");
 
   if (!(file instanceof File)) {
-    return NextResponse.json(
-      { error: "Choose an image before uploading." },
-      { status: 400 },
-    );
+    return jsonError("Choose an image before uploading.", 400);
   }
 
   if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
-    return NextResponse.json(
-      { error: "Avatar images must be JPG, PNG, or WebP." },
-      { status: 400 },
-    );
+    return jsonError("Avatar images must be JPG, PNG, or WebP.", 400);
   }
 
   if (file.size > MAX_AVATAR_SIZE) {
-    return NextResponse.json(
-      { error: "Avatar images must be 2MB or smaller." },
-      { status: 400 },
-    );
+    return jsonError("Avatar images must be 2MB or smaller.", 400);
   }
 
   const extension = file.name.includes(".")
@@ -128,10 +91,7 @@ export async function POST(request: Request) {
         upsert: false,
       }));
   } catch {
-    return NextResponse.json(
-      { error: "Unable to upload your avatar right now." },
-      { status: 503 },
-    );
+    return jsonError("Unable to upload your avatar right now.", 503);
   }
 
   if (uploadError) {
@@ -140,10 +100,7 @@ export async function POST(request: Request) {
         ? "Avatar storage is not fully configured in Supabase yet. Rerun supabase/schema.sql and try again."
         : "Unable to upload your avatar right now.";
 
-    return NextResponse.json(
-      { error: message },
-      { status: 500 },
-    );
+    return jsonError(message, 500);
   }
 
   const { data } = supabase.storage.from("avatars").getPublicUrl(path);
@@ -155,69 +112,34 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  let supabase;
+  const authResult = await getAuthenticatedServerSupabaseOrError({
+    unauthorizedMessage: "You must be logged in to remove an avatar.",
+  });
 
-  try {
-    supabase = await createServerSupabaseClient();
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to reach Supabase right now." },
-      { status: 503 },
-    );
+  if ("response" in authResult) {
+    return authResult.response;
   }
 
-  if (!supabase) {
-    return NextResponse.json(
-      { error: "Supabase is not configured." },
-      { status: 500 },
-    );
+  const { supabase, user } = authResult;
+  const bodyResult = await parseJsonBody<{ avatarUrl?: unknown }>(
+    request,
+    "Send a valid avatar removal body.",
+  );
+
+  if ("response" in bodyResult) {
+    return bodyResult.response;
   }
 
-  let user;
-
-  try {
-    ({
-      data: { user },
-    } = await supabase.auth.getUser());
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to verify your account right now." },
-      { status: 503 },
-    );
-  }
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "You must be logged in to remove an avatar." },
-      { status: 401 },
-    );
-  }
-
-  let body: { avatarUrl?: unknown };
-
-  try {
-    body = (await request.json()) as { avatarUrl?: unknown };
-  } catch {
-    return NextResponse.json(
-      { error: "Send a valid avatar removal body." },
-      { status: 400 },
-    );
-  }
+  const body = bodyResult.data;
 
   if (typeof body.avatarUrl !== "string" || body.avatarUrl.trim().length === 0) {
-    return NextResponse.json(
-      { error: "Choose an avatar to remove first." },
-      { status: 400 },
-    );
+    return jsonError("Choose an avatar to remove first.", 400);
   }
 
   const path = getAvatarStoragePath(body.avatarUrl, user.id);
 
   if (!path) {
-    return NextResponse.json(
-      { error: "That avatar does not belong to this account." },
-      { status: 400 },
-    );
+    return jsonError("That avatar does not belong to this account.", 400);
   }
 
   let error;
@@ -225,17 +147,11 @@ export async function DELETE(request: Request) {
   try {
     ({ error } = await supabase.storage.from("avatars").remove([path]));
   } catch {
-    return NextResponse.json(
-      { error: "Unable to remove your avatar right now." },
-      { status: 503 },
-    );
+    return jsonError("Unable to remove your avatar right now.", 503);
   }
 
   if (error) {
-    return NextResponse.json(
-      { error: "Unable to remove your avatar right now." },
-      { status: 500 },
-    );
+    return jsonError("Unable to remove your avatar right now.", 500);
   }
 
   return NextResponse.json({ removed: true });
