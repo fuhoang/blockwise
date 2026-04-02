@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
+import {
+  getAuthenticatedServerSupabaseOrError,
+  jsonError,
+  parseJsonBody,
+} from "@/lib/api-route";
 import { getSupabaseBrowserEnv } from "@/lib/supabase/config";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 function sanitizeDisplayName(value: unknown) {
   if (typeof value !== "string") {
@@ -62,64 +66,28 @@ function sanitizeAvatarUrl(value: unknown, userId: string) {
 }
 
 export async function POST(request: Request) {
-  let supabase;
+  const authResult = await getAuthenticatedServerSupabaseOrError({
+    unauthorizedMessage: "You must be logged in to update your profile.",
+  });
 
-  try {
-    supabase = await createServerSupabaseClient();
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to reach Supabase right now." },
-      { status: 503 },
-    );
+  if ("response" in authResult) {
+    return authResult.response;
   }
 
-  if (!supabase) {
-    return NextResponse.json(
-      { error: "Supabase is not configured." },
-      { status: 500 },
-    );
-  }
+  const { supabase, user } = authResult;
 
-  let user;
-
-  try {
-    ({
-      data: { user },
-    } = await supabase.auth.getUser());
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to verify your account right now." },
-      { status: 503 },
-    );
-  }
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "You must be logged in to update your profile." },
-      { status: 401 },
-    );
-  }
-
-  let body: {
+  const bodyResult = await parseJsonBody<{
     avatar_url?: unknown;
     bio?: unknown;
     display_name?: unknown;
     timezone?: unknown;
-  };
+  }>(request, "Send a valid profile update body.");
 
-  try {
-    body = (await request.json()) as {
-      avatar_url?: unknown;
-      bio?: unknown;
-      display_name?: unknown;
-      timezone?: unknown;
-    };
-  } catch {
-    return NextResponse.json(
-      { error: "Send a valid profile update body." },
-      { status: 400 },
-    );
+  if ("response" in bodyResult) {
+    return bodyResult.response;
   }
+
+  const body = bodyResult.data;
   const displayName = sanitizeDisplayName(body.display_name);
   const avatarUrl = sanitizeAvatarUrl(body.avatar_url, user.id);
   const bio = sanitizeShortText(body.bio, 240);
@@ -145,10 +113,7 @@ export async function POST(request: Request) {
       .select("id, email, display_name, avatar_url, bio, timezone, created_at")
       .single());
   } catch {
-    return NextResponse.json(
-      { error: "Unable to update your profile right now." },
-      { status: 503 },
-    );
+    return jsonError("Unable to update your profile right now.", 503);
   }
 
   if (error) {
@@ -157,10 +122,7 @@ export async function POST(request: Request) {
         ? "Your Supabase profiles table is missing the latest profile fields. Rerun supabase/schema.sql and try again."
         : "Unable to update your profile right now.";
 
-    return NextResponse.json(
-      { error: message },
-      { status: 500 },
-    );
+    return jsonError(message, 500);
   }
 
   return NextResponse.json({ profile: data });

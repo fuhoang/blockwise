@@ -1,63 +1,29 @@
 import { NextResponse } from "next/server";
 
+import { getAuthenticatedServerSupabaseOrError, jsonError } from "@/lib/api-route";
 import { syncProfileForUser } from "@/lib/profile";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export async function POST() {
-  let supabase;
+  const authResult = await getAuthenticatedServerSupabaseOrError({
+    unauthorizedMessage: "You must be logged in to sync your profile.",
+  });
 
-  try {
-    supabase = await createServerSupabaseClient();
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to reach Supabase right now." },
-      { status: 503 },
-    );
+  if ("response" in authResult) {
+    return authResult.response;
   }
 
-  if (!supabase) {
-    return NextResponse.json(
-      { error: "Supabase is not configured." },
-      { status: 500 },
-    );
-  }
-
-  let user;
-
-  try {
-    ({
-      data: { user },
-    } = await supabase.auth.getUser());
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to verify your account right now." },
-      { status: 503 },
-    );
-  }
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "You must be logged in to sync your profile." },
-      { status: 401 },
-    );
-  }
+  const { user } = authResult;
 
   let profile;
 
   try {
     profile = await syncProfileForUser(user);
   } catch {
-    return NextResponse.json(
-      { error: "Unable to sync your profile right now." },
-      { status: 503 },
-    );
+    return jsonError("Unable to sync your profile right now.", 503);
   }
 
   if (!profile) {
-    return NextResponse.json(
-      { error: "Unable to sync your profile right now." },
-      { status: 500 },
-    );
+    return jsonError("Unable to sync your profile right now.", 500);
   }
 
   return NextResponse.json({ profile });

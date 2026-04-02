@@ -2,11 +2,14 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import {
+  getServerSupabaseOrError,
+  parseJsonBody,
+} from "@/lib/api-route";
+import {
   EMPTY_LEARNING_HISTORY,
   mergeLearningHistory,
   sanitizeLearningHistory,
 } from "@/lib/learning-history";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type {
   ConversionEventRecord,
   LearningHistory,
@@ -422,17 +425,13 @@ async function writeCookieHistory(history: LearningHistory) {
 }
 
 async function readSupabaseHistory() {
-  let supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>;
+  const supabaseResult = await getServerSupabaseOrError();
 
-  try {
-    supabase = await createServerSupabaseClient();
-  } catch {
+  if ("response" in supabaseResult) {
     return null;
   }
 
-  if (!supabase) {
-    return null;
-  }
+  const { supabase } = supabaseResult;
 
   let user: { id: string } | null = null;
 
@@ -490,17 +489,13 @@ async function getPersistedHistoryResponse() {
 }
 
 async function writeSupabaseHistory(body: ActivityInsertBody): Promise<ActivityWriteResult> {
-  let supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>;
+  const supabaseResult = await getServerSupabaseOrError();
 
-  try {
-    supabase = await createServerSupabaseClient();
-  } catch {
+  if ("response" in supabaseResult) {
     return null;
   }
 
-  if (!supabase) {
-    return null;
-  }
+  const { supabase } = supabaseResult;
 
   let user: { id: string } | null = null;
 
@@ -582,13 +577,16 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  let body: ActivityInsertBody;
+  const bodyResult = await parseJsonBody<ActivityInsertBody>(
+    request,
+    "Invalid activity payload.",
+  );
 
-  try {
-    body = (await request.json()) as ActivityInsertBody;
-  } catch {
-    return invalidActivityResponse();
+  if ("response" in bodyResult) {
+    return bodyResult.response;
   }
+
+  const body = bodyResult.data;
 
   const supabaseWrite = await writeSupabaseHistory(body);
 
