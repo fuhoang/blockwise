@@ -84,6 +84,14 @@ const TOPIC_CONTENT: Record<
 const DEFAULT_TOPIC: TutorTopic = "Bitcoin foundations";
 const EMPTY_MESSAGE_REPLY =
   "Ask about Bitcoin, money, wallets, or transactions and I will break it down step by step.";
+const NON_CRYPTO_REPLY =
+  "Sorry, I only answer Bitcoin and crypto learning questions here. Try something like: What is Bitcoin? How do wallets work? Why do transaction fees exist?";
+const PRIVATE_KEY_GUARDRAIL =
+  "Never share a private key, seed phrase, or recovery phrase with anyone, including this chat. If you want, I can explain what each one does and how to keep it safe.";
+const FINANCIAL_ADVICE_GUARDRAIL =
+  "I cannot tell you what to buy, sell, or how much to invest. I can help you compare the risks, time horizon, and tradeoffs so you can make your own decision.";
+const ILLEGAL_ACTIVITY_GUARDRAIL =
+  "I cannot help with stealing, scamming, bypassing security, or hiding illegal activity. If you want, I can explain how to protect yourself from those risks instead.";
 
 let cachedClient: OpenAI | null = null;
 let cachedApiKey: string | null = null;
@@ -95,6 +103,45 @@ export function inferTutorTopic(message: string) {
     TOPIC_MATCHERS.find(({ pattern }) => pattern.test(lowered))?.topic ??
     DEFAULT_TOPIC
   );
+}
+
+function isCryptoRelatedQuestion(message: string) {
+  return /bitcoin|btc|crypto|blockchain|wallet|seed phrase|recovery phrase|private key|public key|transaction|fee|mining|miner|node|decentralized|network|satoshi|lightning|self-custody|custody|exchange|cold wallet|hot wallet|proof of work|hash rate|confirmation|block/.test(
+    message,
+  );
+}
+
+function getGuardrailReply(message: string) {
+  const lowered = message.toLowerCase();
+
+  if (
+    /(seed phrase|recovery phrase|private key|secret phrase)/.test(lowered) &&
+    /(share|send|paste|give|show|upload|enter|type)/.test(lowered)
+  ) {
+    return PRIVATE_KEY_GUARDRAIL;
+  }
+
+  if (
+    /(should i buy|should i sell|what should i buy|what should i invest|how much should i invest|which coin should i buy|tell me what to buy)/.test(
+      lowered,
+    )
+  ) {
+    return FINANCIAL_ADVICE_GUARDRAIL;
+  }
+
+  if (
+    /(hack|phish|steal|scam|bypass|exploit|launder|evade|drain a wallet|drain wallet)/.test(
+      lowered,
+    )
+  ) {
+    return ILLEGAL_ACTIVITY_GUARDRAIL;
+  }
+
+  if (!isCryptoRelatedQuestion(lowered)) {
+    return NON_CRYPTO_REPLY;
+  }
+
+  return null;
 }
 
 function getOpenAIClient() {
@@ -141,6 +188,12 @@ export async function createTutorReply(message: string) {
 
   if (!cleaned) {
     return EMPTY_MESSAGE_REPLY;
+  }
+
+  const guardrailReply = getGuardrailReply(cleaned);
+
+  if (guardrailReply) {
+    return guardrailReply;
   }
 
   const topic = inferTutorTopic(cleaned);

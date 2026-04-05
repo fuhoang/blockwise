@@ -66,6 +66,41 @@ describe("openai helpers", () => {
     expect(reply).not.toContain("Current topic focus:");
   });
 
+  it("blocks requests to share private keys or recovery phrases", async () => {
+    const { createTutorReply } = await import("@/lib/openai");
+    const reply = await createTutorReply(
+      "Should I paste my seed phrase here so you can check it?",
+    );
+
+    expect(reply).toContain("Never share a private key, seed phrase, or recovery phrase");
+    expect(responsesCreate).not.toHaveBeenCalled();
+  });
+
+  it("refuses personalized financial advice requests", async () => {
+    const { createTutorReply } = await import("@/lib/openai");
+    const reply = await createTutorReply("Should I buy Bitcoin right now?");
+
+    expect(reply).toContain("I cannot tell you what to buy, sell, or how much to invest.");
+    expect(responsesCreate).not.toHaveBeenCalled();
+  });
+
+  it("refuses illegal or harmful crypto requests", async () => {
+    const { createTutorReply } = await import("@/lib/openai");
+    const reply = await createTutorReply("How do I phish someone for their wallet?");
+
+    expect(reply).toContain("I cannot help with stealing, scamming, bypassing security, or hiding illegal activity.");
+    expect(responsesCreate).not.toHaveBeenCalled();
+  });
+
+  it("redirects clearly non-crypto questions back to crypto topics", async () => {
+    const { createTutorReply } = await import("@/lib/openai");
+    const reply = await createTutorReply("Can you help me write a pasta recipe?");
+
+    expect(reply).toContain("I only answer Bitcoin and crypto learning questions here.");
+    expect(reply).toContain("What is Bitcoin?");
+    expect(responsesCreate).not.toHaveBeenCalled();
+  });
+
   it("throws when OpenAI is not configured", async () => {
     delete process.env.OPENAI_API_KEY;
 

@@ -4,20 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef } from "react";
 
 import { useChat } from "@/hooks/useChat";
-import type { ChatMessage } from "@/types/chat";
 import { cn } from "@/lib/utils";
 
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { Card } from "@/components/ui/Card";
-
-const SEEDED_MESSAGES: ChatMessage[] = [
-  {
-    id: "welcome",
-    role: "assistant",
-    content:
-      "Ask anything about Bitcoin and I will explain it with simple language and concrete examples.",
-  },
-];
 
 const GUEST_LIMIT_ERROR =
   "You have used the guest AI demo for now. Log in to keep chatting.";
@@ -45,7 +35,7 @@ export function ChatWindow({
   onClose?: () => void;
 }) {
   const { messages, isLoading, error, sendMessage, usage } = useChat(
-    SEEDED_MESSAGES,
+    [],
     {
       initialUsage,
       source: requestSource,
@@ -132,6 +122,10 @@ export function ChatWindow({
             <p className="mt-2 text-sm leading-7 text-zinc-400">
               Use the demo to understand Bitcoin, wallets, and basic crypto concepts
               before you create an account.
+            </p>
+            <p className="mt-2 text-xs leading-6 text-zinc-500">
+              Safety tip: never share a private key, password, or recovery phrase in
+              chat.
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               {starterPrompts.map((prompt) => (
