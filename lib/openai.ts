@@ -94,12 +94,66 @@ const FINANCIAL_ADVICE_GUARDRAIL =
   "I cannot tell you what to buy, sell, or how much to invest. I can help you compare the risks, time horizon, and tradeoffs so you can make your own decision.";
 const ILLEGAL_ACTIVITY_GUARDRAIL =
   "I cannot help with stealing, scamming, bypassing security, or hiding illegal activity. If you want, I can explain how to protect yourself from those risks instead.";
+const COMMON_QUESTION_REPLIES: Array<{
+  prompts: string[];
+  reply: string;
+}> = [
+  {
+    prompts: ["what is bitcoin", "explain bitcoin", "whats bitcoin"],
+    reply:
+      "Bitcoin is digital money that no single bank or company controls. People can send it directly to each other over the internet, and the network keeps a shared record of who owns what.",
+  },
+  {
+    prompts: ["what is a wallet", "how do wallets work", "whats a wallet"],
+    reply:
+      "A crypto wallet is a tool that helps you control your keys and approve transactions. It does not hold coins inside it like a physical wallet; it helps you prove ownership on the network.",
+  },
+  {
+    prompts: ["what is blockchain", "whats a blockchain", "explain blockchain"],
+    reply:
+      "A blockchain is a shared record of transactions stored in blocks linked together over time. Many computers keep copies of it so the history is harder for one person to change in secret.",
+  },
+  {
+    prompts: [
+      "why do transaction fees exist",
+      "what are transaction fees",
+      "why are there fees",
+    ],
+    reply:
+      "Transaction fees help prioritize which payments get confirmed first. They also give miners or validators a reason to include your transaction in the next block.",
+  },
+];
+const SMALL_TALK_PROMPTS = new Set([
+  "hi",
+  "hello",
+  "hey",
+  "yo",
+  "good morning",
+  "good afternoon",
+  "good evening",
+  "how are you",
+  "whats your name",
+  "who are you",
+  "i need help",
+  "help me",
+]);
+const REPLY_CACHE_TTL_MS = 1000 * 60 * 30;
 
 let cachedClient: OpenAI | null = null;
 let cachedApiKey: string | null = null;
+const cachedReplies = new Map<string, { expiresAt: number; reply: string }>();
+
+export function normalizeTutorPrompt(message: string) {
+  return message
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 export function inferTutorTopic(message: string) {
-  const lowered = message.toLowerCase();
+  const lowered = normalizeTutorPrompt(message);
 
   return (
     TOPIC_MATCHERS.find(({ pattern }) => pattern.test(lowered))?.topic ??
@@ -114,13 +168,11 @@ function isCryptoRelatedQuestion(message: string) {
 }
 
 function isAllowedSmallTalk(message: string) {
-  return /^(hi|hello|hey|yo|good morning|good afternoon|good evening|how are you|what'?s your name|who are you|i need help|help me)\??$/.test(
-    message,
-  );
+  return SMALL_TALK_PROMPTS.has(message);
 }
 
 function getGuardrailReply(message: string) {
-  const lowered = message.toLowerCase();
+  const lowered = normalizeTutorPrompt(message);
 
   if (
     /(seed phrase|recovery phrase|private key|secret phrase)/.test(lowered) &&
@@ -154,6 +206,34 @@ function getGuardrailReply(message: string) {
   }
 
   return null;
+}
+
+function getCommonQuestionReply(message: string) {
+  return (
+    COMMON_QUESTION_REPLIES.find(({ prompts }) => prompts.includes(message))?.reply ?? null
+  );
+}
+
+function getCachedTutorReply(message: string) {
+  const entry = cachedReplies.get(message);
+
+  if (!entry) {
+    return null;
+  }
+
+  if (entry.expiresAt <= Date.now()) {
+    cachedReplies.delete(message);
+    return null;
+  }
+
+  return entry.reply;
+}
+
+function setCachedTutorReply(message: string, reply: string) {
+  cachedReplies.set(message, {
+    expiresAt: Date.now() + REPLY_CACHE_TTL_MS,
+    reply,
+  });
 }
 
 function getOpenAIClient() {
@@ -208,6 +288,19 @@ export async function createTutorReply(message: string) {
     return guardrailReply;
   }
 
+  const normalizedPrompt = normalizeTutorPrompt(cleaned);
+  const commonQuestionReply = getCommonQuestionReply(normalizedPrompt);
+
+  if (commonQuestionReply) {
+    return commonQuestionReply;
+  }
+
+  const cachedReply = getCachedTutorReply(normalizedPrompt);
+
+  if (cachedReply) {
+    return cachedReply;
+  }
+
   const topic = inferTutorTopic(cleaned);
   const { client, model } = getOpenAIClient();
   const response = await client.responses.create({
@@ -220,6 +313,8 @@ export async function createTutorReply(message: string) {
   if (!reply) {
     throw new Error("OpenAI returned an empty response.");
   }
+
+  setCachedTutorReply(normalizedPrompt, reply);
 
   return reply;
 }
