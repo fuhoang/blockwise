@@ -67,36 +67,46 @@ function buildGuestCookieOptions(maxAgeSeconds: number) {
   };
 }
 
-async function getSignedInTutorUsageToday({
-  supabase,
-  userId,
-  limit,
-}: {
-  supabase: {
-    from: (table: string) => {
-      select: (...args: unknown[]) => {
-        eq: (column: string, value: unknown) => {
-          eq: (column: string, value: unknown) => {
-            gte: (column: string, value: string) => {
-              lt: (
-                column: string,
-                value: string,
-              ) => Promise<{ count: number | null }>;
-            };
+type TutorUsageCounter = {
+  count: number | null;
+};
+
+type TutorUsageSupabase = {
+  from: (table: "learning_activity") => {
+    select: (
+      columns: "id",
+      options: { count: "exact"; head: true },
+    ) => {
+      eq: (column: "user_id", value: string) => {
+        eq: (column: "activity_type", value: "tutor_prompt") => {
+          gte: (column: "created_at", value: string) => {
+            lt: (
+              column: "created_at",
+              value: string,
+            ) => Promise<TutorUsageCounter>;
           };
         };
       };
     };
   };
+};
+
+async function getSignedInTutorUsageToday({
+  supabase,
+  userId,
+  limit,
+}: {
+  supabase: unknown;
   userId: string;
   limit: number;
 }) {
+  const usageSupabase = supabase as TutorUsageSupabase;
   const now = new Date();
   const dayStart = new Date(now);
   dayStart.setUTCHours(0, 0, 0, 0);
   const nextResetAt = getNextDayResetAt(now);
 
-  const result = await supabase
+  const result = await usageSupabase
     .from("learning_activity")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
