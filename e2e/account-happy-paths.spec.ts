@@ -36,7 +36,10 @@ test.describe("account happy paths", () => {
   });
 
   test("uploads a new avatar and saves the profile", async ({ page }) => {
+    let avatarUploadCalled = false;
+
     await page.route("**/api/profile/avatar", async (route) => {
+      avatarUploadCalled = true;
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -66,14 +69,23 @@ test.describe("account happy paths", () => {
     });
 
     await page.goto("/profiles");
-    await page.getByLabel("Avatar image").setInputFiles({
+    const avatarInput = page.getByLabel("Avatar image");
+    await avatarInput.setInputFiles({
       name: "avatar.png",
       mimeType: "image/png",
       buffer: Buffer.from("89504e470d0a1a0a", "hex"),
     });
-    await page.getByRole("button", { name: "Upload avatar and save" }).click();
+    await expect
+      .poll(async () =>
+        avatarInput.evaluate((input) => input.files?.[0]?.name ?? null),
+      )
+      .toBe("avatar.png");
+    await page
+      .getByRole("button", { name: /Upload avatar and save|Save profile/ })
+      .click();
 
     await expect(page.getByText("Profile updated.")).toBeVisible();
+    expect(avatarUploadCalled).toBe(true);
   });
 
   test("opens the billing portal successfully", async ({ page, baseURL }) => {
