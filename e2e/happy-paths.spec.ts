@@ -84,14 +84,29 @@ test.describe("happy paths", () => {
     );
     await expect(prompt).toBeVisible();
 
-    for (const question of [
-      "What is Bitcoin?",
-      "How do wallets work?",
-      "Why do fees exist?",
-      "What is self-custody?",
-    ]) {
+    const guestQuestions = [
+      {
+        question: "What is Bitcoin?",
+        expectedText: "Tutor reply 1",
+      },
+      {
+        question: "How do wallets work?",
+        expectedText: "Tutor reply 2",
+      },
+      {
+        question: "Why do fees exist?",
+        expectedText: "Tutor reply 3",
+      },
+      {
+        question: "What is self-custody?",
+        expectedText: "Guest demo complete",
+      },
+    ];
+
+    for (const { question, expectedText } of guestQuestions) {
       await prompt.fill(question);
       await page.getByRole("button", { name: "Ask" }).click();
+      await expect(page.getByText(expectedText)).toBeVisible();
     }
 
     await expect(page.getByText("Guest demo · 0 of 3 questions left")).toBeVisible();
