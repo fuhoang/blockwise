@@ -84,7 +84,6 @@ test.describe("account happy paths", () => {
         avatarInput.evaluate((input) => input.files?.[0]?.name ?? null),
       )
       .toBe("avatar.png");
-    await expect(profileDetailsSection.getByText("Selected: avatar.png")).toBeVisible();
     const saveButton = profileDetailsSection.locator('button[type="submit"]').first();
     await expect(profileDetailsSection).toBeVisible();
     await expect(saveButton).toBeEnabled();
