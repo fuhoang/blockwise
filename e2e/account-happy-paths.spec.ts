@@ -70,9 +70,9 @@ test.describe("account happy paths", () => {
 
     await page.goto("/profiles");
     const profileDetailsSection = page
-      .getByText("Profile details")
-      .locator("..")
-      .locator("..");
+      .locator("section")
+      .filter({ has: page.getByText("Profile details", { exact: true }) })
+      .first();
     const avatarInput = page.getByLabel("Avatar image");
     await avatarInput.setInputFiles({
       name: "avatar.png",
@@ -88,6 +88,7 @@ test.describe("account happy paths", () => {
       name: "Upload avatar and save",
       exact: true,
     });
+    await expect(profileDetailsSection).toBeVisible();
     await saveButton.scrollIntoViewIfNeeded();
     await expect(saveButton).toBeEnabled();
     await saveButton.click();
