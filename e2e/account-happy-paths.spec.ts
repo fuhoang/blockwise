@@ -69,6 +69,10 @@ test.describe("account happy paths", () => {
     });
 
     await page.goto("/profiles");
+    const profileDetailsSection = page
+      .locator("section")
+      .filter({ has: page.getByText("Profile details", { exact: true }) })
+      .first();
     const avatarInput = page.getByLabel("Avatar image");
     await avatarInput.setInputFiles({
       name: "avatar.png",
@@ -80,9 +84,14 @@ test.describe("account happy paths", () => {
         avatarInput.evaluate((input) => input.files?.[0]?.name ?? null),
       )
       .toBe("avatar.png");
-    await page
-      .getByRole("button", { name: /Upload avatar and save|Save profile/ })
-      .click();
+    const saveButton = profileDetailsSection.getByRole("button", {
+      name: "Upload avatar and save",
+      exact: true,
+    });
+    await expect(profileDetailsSection).toBeVisible();
+    await saveButton.scrollIntoViewIfNeeded();
+    await expect(saveButton).toBeEnabled();
+    await saveButton.click();
 
     await expect(page.getByText("Profile updated.")).toBeVisible();
     expect(avatarUploadCalled).toBe(true);
