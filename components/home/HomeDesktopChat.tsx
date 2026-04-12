@@ -59,7 +59,7 @@ export function HomeDesktopChat({
         </div>
       ) : null}
 
-      <div className="w-full rounded-3xl border border-white/10 bg-zinc-900/80 p-5 backdrop-blur">
+      <div className="w-full rounded-none border border-white/10 bg-zinc-900/80 p-5 backdrop-blur">
         <HomeChatComposer
           onPromptChange={onPromptChange}
           onSubmit={onSubmit}
